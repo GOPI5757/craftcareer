@@ -18,11 +18,49 @@ You can also host this creator itself as a static site. It requires neither acco
 
 This update fixes canvas clipping during scrolling/navigation and keeps the inspector's scroll position and expanded groups when colors or other settings are updated. To continue an existing portfolio, open its exported website ZIP in this creator. The portfolio configuration format is unchanged.
 
+## Canvas overlays and corner controls — 24 October 2026
+
+- Editing tools now float over the preview. They add no rows, padding, or section height. The same content occupies the same positions in Edit, Browse, and the exported website.
+- The colored frame marks the website width; dashed outlines mark section boundaries. **END OF WEBSITE** marks the actual bottom. These guides never appear in Browse or the published website.
+- Split controls sit on the first divider of their own group. Hover or focus them to see the outlined cells and their numbers. Add section, Add subsection, and Add project remain available as overlay controls.
+- Select a component to reveal **four circular corner handles**. Drag inward to round the corners and outward to square them. The **Linked / Independent** lock beneath the selection matches **Link corners** in the inspector.
+- With the lock off, the inspector exposes **Top left**, **Top right**, **Bottom right**, and **Bottom left**. With it on, one radius controls all four. Reset buttons, undo/redo, and device overrides continue to work.
+- **Adjust corners on canvas** in Appearance, Image border, Cell layout, or Background layers selects that exact border. The blue guide and its label identify the target. Image handles follow the fitted image, not its letterboxing or caption.
+- Handles accept mouse and touch dragging. Keyboard arrows change the radius; Shift uses larger steps, Home squares the corner, End uses the available maximum, and Escape cancels a drag. A completed drag is one undo step. Canvas drags are bounded by the box size.
+- Configuration stays in the same files: `borderRadius` (or `imageBorder.radius`) is the shared rem value. `radiusLinked: false` uses `radiusCorners: { topLeft, topRight, bottomRight, bottomLeft }`. Missing corner settings preserve older scalar-only configurations. Exported portfolios remain readable and can be reopened in CraftCareer.
+
+## Inspector, split targeting and image update — 24 October 2026
+
+- The inspector has one scroll area with a fixed header. Expanded groups keep their full content height, and the hierarchy divider preserves a usable minimum inspector area on short windows. Both the first and last fields remain reachable.
+- **Edit split** sits on its group’s divider, showing the direction and cell count. Hover or keyboard-focus it to outline the group and number its immediate children. The dialog names the group path and the content of each cell. Changing direction or proportions still preserves content.
+- Select an **Image**, then open **Image border** for width, color, and radius. These affect the visible image rather than its caption. Existing **Appearance** settings still style the overall component.
+- Open **Image edge blending** and enable **Blend edges**. **Fade width** controls how far the fade extends from all four edges. Leave **Tint color** blank to reveal the real background, including gradients and background imagery. Set a color and **Tint strength** to add a colored feather that still fades into the background. Reset returns to the default; disabling the effect restores sharp image edges.
+- Portrait images using **contain** stay fully visible, and the fade follows the image itself rather than its empty surrounding space. The image border and caption remain crisp.
+- New image settings are stored under the image element as `imageBorder` and `edgeBlend` in the section configuration. They support independent device overrides, ZIP export, and later reimport. Older images keep their existing appearance until these effects are enabled. Image URL edits now update the preview while typing/pasting as other text fields do.
+
+## Navigation update — 24 October 2026
+
+- **Header:** Edit/Browse, Assets, page/device preview, Full view, and panel visibility. **Settings** holds website settings, creator color/theme, New, Open ZIP, Save, Export, Undo/Redo, tutorial, and quick guide.
+- **Bottom components tray:** drag into a cell, or select a cell and click a component. Use arrows, the mouse wheel, horizontal trackpad scrolling, or middle-button dragging to browse the tray. Dropping a new component on an occupied leaf replaces it; Undo restores the previous component.
+- **Hierarchy:** automatically named sections, subsections, split cells, components, and project cards. Expand branches to navigate; selecting a row opens its inspector. Empty cells are labelled clearly. Hierarchy labels are generated from content and cannot be renamed there. Section names remain editable in Section settings.
+- **Panel divider:** drag the horizontal divider between Hierarchy and Inspector, or focus it and use Up/Down. Its position is remembered on this browser.
+- **Canvas controls:** the section-name button opens section settings; Remove section asks for confirmation. Add section below a section inserts there. Split and Edit split open the same visual wizard. Changing direction retains content; removing extra cells asks for confirmation.
+- **Inspector:** labels and controls sit side by side, with ↺ reset buttons. Appearance and the floating toolbar show controls relevant to the selected component. Font controls for captions/titles are separate from media appearance. Hex edits immediately update their color swatch. Inspector scroll and disclosure state remain intact during updates.
+- **Move components:** click anywhere in an occupied leaf cell to select it; drag the cell to move or swap its component. Double-click text to edit it directly. Internal image drags reuse the existing asset. External file drops ask where to save.
+- **Asset library:** a large content-browser dialog, folder tree on the left and assets on the right. Upload multiple images/documents/models, create section subfolders, pick assets, and move them with references updated across devices. Protected section/type roots and Archive rules are unchanged.
+- **YouTube only:** new YouTube video imports are rejected, including direct drops. Video components, gallery videos and background video settings accept YouTube URLs. Existing video files in older ZIPs are preserved for recovery/cleanup, but YouTube video playback is replaced by a YouTube prompt. Legacy video folders remain accessible when they contain files.
+- **Fixed canvases:** Fit sections use the available viewport height; Flexible sections use their configured rem height. Subsection height controls its grid. Resizing splits or enlarging components does not enlarge these canvases. Components stay within their cells, and long text can scroll inside its cell. Infinite/project/content-panel sections still grow by adding subsections. Set device overrides where a layout needs more room.
+- **Background borders:** Background layers now includes border width, border color, and corner radius.
+
+Everything remains config-driven. Exports still contain `config/site.js`, individual `config/sections/*.js`, the renderer and assets. Previous CraftCareer exports remain importable. Hierarchy expansion and panel sizes are editor preferences and do not affect the exported portfolio.
+
+The included tutorial is retained. It demonstrates the previous workspace layout; its player notes where controls moved. No tutorial media is included in users' exported portfolios.
+
 ## How to build
 
 ### Watch the tutorial
 
-Click **Video tutorial** in the left sidebar (the play icon when collapsed). The 2-minute 36-second tutorial opens over the editor, with English narration, visible captions, animated pointers, playback speed/fullscreen controls, and chapter shortcuts. Press Play to begin. Close the player or press Escape to return to your work; closing pauses the video and reopening keeps its playback position during that session.
+Click **Video tutorial** in the Settings menu. The 2-minute 36-second tutorial opens over the editor, with English narration, visible captions, animated pointers, playback speed/fullscreen controls, and chapter shortcuts. Press Play to begin. Close the player or press Escape to return to your work; closing pauses the video and reopening keeps its playback position during that session.
 
 The tutorial is bundled in `tutorial/`, so it also works when opening the creator locally. Keep that folder with the creator when hosting it. The video is loaded on demand, and is not included in portfolios your users export.
 
@@ -30,9 +68,9 @@ In `creator-config.js`, `tutorial.enabled` hides or shows the button. You can al
 
 ### Sections first
 
-- **Fit:** fills the viewport after the top navigation. If your content cannot fit, it grows to keep text accessible.
-- **Flexible:** choose a minimum section height in rem.
-- **Infinite:** add as many subsections as needed. Each subsection can grow to fit content or use a minimum rem/viewport height.
+- **Fit:** fills the viewport after the top navigation. Oversized content stays within cells; long text scrolls inside its cell.
+- **Flexible:** choose a section height in rem.
+- **Infinite:** add as many subsections as needed. Each subsection has a configured rem/viewport height for its grid.
 - **Projects:** a category bar or filter sidebar and a collection of cards. Categories can also be hidden.
 - **Content panel:** a separate canvas that opens from a button near the bottom of the screen.
 - **Navigation bar:** add rows, split them into cells, and place normal components. Choose sticky or scrolling behavior. Available in Add section and the Components palette.
@@ -50,9 +88,9 @@ Desktop is the base design. Tablet and mobile inherit the desktop structure. Sel
 
 ### Place and edit components
 
-Drag a component from the left palette into an empty cell. You can also select the cell and click the component. Select a placed component for its floating formatting toolbar and collapsible inspector. Double-click plain text in the preview to type directly.
+Drag a component from the bottom tray into an empty cell. You can also select the cell and click the component. Select a placed component for its floating formatting toolbar and collapsible inspector. Double-click plain text in the preview to type directly.
 
-The floating toolbar remains inside the preview and scrolls horizontally if needed. The move handle on the cell or floating toolbar moves a component to another cell. Dropping onto an occupied cell swaps the two components. Collapse the sidebar or inspector to give the preview more room.
+The floating toolbar remains inside the preview and scrolls horizontally if needed. Drag directly from an occupied cell to move its component to another cell. Dropping onto an occupied cell swaps the two components. Hide the right panels to give the preview more room.
 
 Components include text, buttons, decorative icons, images, video, galleries, code snippets, Sketchfab viewers, contact forms, dropdowns, lists, dividers, and spacers. Every component has a visibility switch. Lists support text, buttons, dropdowns, images, and images with captions. Shared item appearance applies to new list items; use an individual override when one item needs different styling.
 
@@ -60,19 +98,19 @@ Numeric fields support typing, the normal arrow controls, and horizontal draggin
 
 Use **Full view** to hide the editor panels and inspect the site in Browse mode. Exit with the visible button or Escape. Ordinary setting changes preserve preview scroll position.
 
-In infinite sections, project pages and content panels, **Add a layout preset** creates an editable image breakdown, paired-image comparison, video with notes, code walkthrough, model viewer, or profile/skills layout. These are normal grids and components after insertion. **Add subsection** is also available at the bottom of the canvas. A subsection’s height controls its actual grid; a blank heading is hidden. Content grows or wraps when it needs more room.
+In infinite sections, project pages and content panels, **Add a layout preset** creates an editable image breakdown, paired-image comparison, video with notes, code walkthrough, model viewer, or profile/skills layout. These are normal grids and components after insertion. **Add subsection** is also available at the bottom of the canvas. A subsection’s height controls its actual grid; a blank heading is hidden. Text wraps within cells, and long text scrolls without expanding fixed canvases.
 
 ### Appearance and backgrounds
 
 Website settings control the global font, background, text, accent, navigation, contact dock, and footer. Components can override font and appearance. Project headings, card text, category navigation and subsection titles have their own appearance controls.
 
-Buttons have automatic sizing or custom width and minimum height in rem. Custom buttons shrink to their cell and grow for wrapped labels. **Choose icon** opens a searchable local icon library with names, pictures and categories. A standalone Icon component is decorative. The library contains 2,259 choices, including all 616 requested Material names and game-tool/social brand icons. Marmoset Toolbag is labelled as an MT monogram.
+Buttons have automatic sizing or custom width and height in rem. Custom buttons stay within their cell. **Choose icon** opens a searchable local icon library with names, pictures and categories. A standalone Icon component is decorative. The library contains 2,259 choices, including all 616 requested Material names and game-tool/social brand icons. Marmoset Toolbag is labelled as an MT monogram.
 
 Component appearance includes background colors/gradients, borders and padding. Lists have separate container and shared-item appearance, with optional individual overrides. Cells also have their own backgrounds, borders, padding and margin.
 
 Backgrounds have separate base, image/video, and overlay layers. A one-color array is solid; multiple colors create a gradient with your chosen angle. Image and overlay opacity are independent. Optional edge fading blends the image into a chosen page color.
 
-Background videos are muted and respect reduced-motion preferences. Standard local video components have controls; YouTube embeds load after clicking Play. Galleries support images and video, captions, arrow navigation, and image enlargement.
+Background videos are muted and respect reduced-motion preferences. Video components use YouTube links and load the player after clicking Play. Galleries support images and video, captions, arrow navigation, and image enlargement.
 
 ### Projects and categories
 
@@ -118,7 +156,7 @@ assets/archive/models/
 
 JPEG, PNG, BMP and other browser-decodable raster uploads convert to WebP by default. The original files on your computer stay unchanged. **Website → Image optimization** controls conversion, quality (default 0.86), and maximum dimension (default 2560 pixels; images are never enlarged). SVG, GIF, animated PNG and existing WebP stay unchanged. Unsupported decoders fall back to the original file with a notification. Video is not transcoded.
 
-Images use asynchronous decoding and lazy loading below the first visible image. The first visible image receives higher loading priority, YouTube loads its player on demand, local videos use no initial preload, and background videos load near the viewport. Large files and slow connections still affect load time.
+Images use asynchronous decoding and lazy loading below the first visible image. The first visible image receives higher loading priority, YouTube loads its player on demand, background players use lazy loading. Large files and slow connections still affect load time.
 
 For an interactive 3D model, link a public **Sketchfab** model. FBX/GLB/other source files can be stored in Models and offered for download. This release does not render raw FBX files locally.
 
@@ -126,7 +164,7 @@ For an interactive 3D model, link a public **Sketchfab** model. FBX/GLB/other so
 
 - Local drafts save in this browser on this device. **Save draft** also saves explicitly.
 - **Export website** is your portable backup and publishing package.
-- **Open ZIP** reads CraftCareer exports and legacy Portfolio Forge exports, including its edited configurations and assets. This creator does not analyze/import arbitrary third-party sites; that belongs to the separate Portfolio Studio editor.
+- **Open ZIP** reads CraftCareer exports and legacy CraftCareer exports, including its edited configurations and assets. This creator does not analyze/import arbitrary third-party sites; that belongs to the separate Portfolio Studio editor.
 - **Ctrl+Z / Cmd+Z** undo; **Ctrl+Y / Cmd+Shift+Z** redo. Inputs keep their normal text-editing undo while focused.
 - Editor dark/light mode is independent of your portfolio’s theme. Dark is the initial editor theme. The appearance button beside the theme switch changes the editor accent, with red as the default. Edit `creator-config.js` to set the default accent and theme for a fresh browser; an existing saved preference takes priority.
 
@@ -143,3 +181,4 @@ YouTube and Sketchfab need internet access and publicly accessible content. Thir
 `index.html` is the creator shell; `editor.css` and `app.js` provide the editor; `model.js` defines configuration and validation; `layout.js` manages device inheritance and weighted splits; `icons.js` bundles the searchable local icon library; `creator-config.js` defines editor defaults; `runtime.js` and `site.css` render portfolios; `resources.js` includes the same runtime and CSS for local preview/export; `vendor` contains JSZip and its license. If you change runtime.js, site.css, layout.js or icons.js, run `python build.py` to refresh resources.js before packaging.
 
 See **TEST-REPORT.md** for completed verification and the scope of testing. The `verification` folder contains reproducible model and browser test harnesses. Tests use isolated draft storage and synthetic project data.
+

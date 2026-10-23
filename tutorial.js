@@ -23,7 +23,7 @@
   content.className = 'tutorial-content';
   const description = document.createElement('p');
   description.id = 'tutorial-description';
-  description.textContent = 'A 2-minute 36-second guide with voice, captions, and highlighted controls. Your work stays open behind this player.';
+  description.textContent = 'A 2-minute 36-second guide with voice, captions, and highlighted controls. Recorded with the previous workspace layout. Components are now along the bottom; file actions are under Settings. Your work stays open behind this player.';
   const video = document.createElement('video');
   video.controls = true;
   video.playsInline = true;
