@@ -1,0 +1,29 @@
+/* The tutorial uses the creator's theme without changing the canvas layout. */
+#video-tutorial[hidden] { display:none; }
+.rail #video-tutorial { color:var(--accent); }
+#tutorial-dialog {
+  width:min(1080px, calc(100vw - 24px)); max-width:calc(100vw - 24px);
+  max-height:calc(100dvh - 24px); margin:auto; padding:0;
+  background:var(--panel); color:var(--text); border:1px solid var(--line);
+  border-radius:12px; box-shadow:var(--shadow); overflow:auto;
+}
+#tutorial-dialog::backdrop { background:rgb(0 0 0 / .72); }
+.tutorial-heading {
+  display:flex; align-items:center; gap:16px; padding:14px 20px;
+  position:sticky; top:0; z-index:1; background:var(--panel); border-bottom:1px solid var(--line);
+}
+.tutorial-heading h2 { margin:0; flex:1; font-size:1.2rem; }
+.tutorial-heading button { font-size:24px; min-width:42px; min-height:42px; }
+.tutorial-content { padding:16px 20px 20px; }
+#tutorial-description { color:var(--muted); line-height:1.5; font-size:13px; margin:0 0 14px; }
+#tutorial-dialog video { display:block; width:100%; max-height:62dvh; aspect-ratio:16/9; background:#07090c; object-fit:contain; border-radius:6px; }
+.tutorial-chapters { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+.tutorial-chapters button { font-size:12px; }
+.tutorial-open-video { font-size:12px; }
+.tutorial-error { color:var(--danger); font-size:13px; margin:12px 0; }
+@media(max-width:600px) {
+  .tutorial-heading { padding:10px 12px; }
+  .tutorial-content { padding:12px; }
+  .tutorial-chapters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .tutorial-chapters button { text-align:left; overflow-wrap:anywhere; }
+}

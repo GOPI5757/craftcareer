@@ -1,0 +1,1 @@
+(function(){'use strict';const c=window.PortfolioConfig;document.title=c.site.title;document.querySelector('meta[name="description"]').content=c.site.description;ForgeRuntime(document.getElementById('site'),{version:c.version,site:c.site,deviceOverrides:c.deviceOverrides||{},sections:c.sectionOrder.map(id=>window.PortfolioSections[id]).filter(Boolean)});})();

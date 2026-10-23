@@ -1,0 +1,6 @@
+{
+  "application": "CraftCareer",
+  "formatVersion": 2,
+  "schema": "craftcareer.config-grid",
+  "legacyCompatible": true
+}

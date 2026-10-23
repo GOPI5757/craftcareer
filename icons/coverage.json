@@ -1,0 +1,17 @@
+{
+  "materialCount": 2234,
+  "requestedMaterialCount": 616,
+  "missingRequestedMaterial": [],
+  "brandCount": 19,
+  "originalSymbols": [
+    "wireframe-cube",
+    "git-branch",
+    "git-fork",
+    "git-pull-request",
+    "favicon",
+    "marmoset-toolbag"
+  ],
+  "total": 2259,
+  "fontBytes": 128352,
+  "libraryBytes": 511531
+}

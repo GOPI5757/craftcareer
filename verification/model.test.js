@@ -1,0 +1,22 @@
+const assert=require('node:assert/strict');
+const M=require('../model.js');
+let count=0;function test(name,fn){fn();console.log('PASS '+name);count++;}
+test('Blank document validates',()=>assert.deepEqual(M.validate(M.fresh()),[]));
+for(const role of ['Game Programmer','Game Artist','Technical Artist','Game Animator'])test(role+' starter is valid',()=>assert.deepEqual(M.validate(M.starter(role)),[]));
+test('Split retains one existing component in first child',()=>{const s=M.section('Profile');const e=s.grid.element=M.element('text');M.split(s,s.grid.id,'columns',[10,40,50]);assert.equal(s.grid.children.length,3);assert.equal(s.grid.element,null);assert.equal(s.grid.children[0].element,e);assert.deepEqual(M.validate({...M.fresh(),sections:[s]}),[]);});
+for(const ratios of [[0,100],[40,40],[101,-1],[20,20,20,20,20],[NaN,100],[100]])test('Reject invalid ratios '+JSON.stringify(ratios),()=>{const s=M.section('A');assert.throws(()=>M.split(s,s.grid.id,'columns',ratios));});
+test('Maximum nesting depth is enforced',()=>{const s=M.section('Profile');let c=s.grid;for(let i=0;i<3;i++){M.split(s,c.id,'rows',[50,50]);c=c.children[0];}assert.throws(()=>M.split(s,c.id,'rows',[50,50]),/Three split levels/);});
+test('Existing split cannot be overwritten',()=>{const s=M.section('A');M.split(s,s.grid.id,'columns',[50,50]);assert.throws(()=>M.split(s,s.grid.id,'columns',[50,50]));});
+test('Find a cell in an infinite subsection',()=>{const s=M.section('Case study','infinite');assert.equal(M.findCell(s,s.blocks[0].grid.id).cell,s.blocks[0].grid);});
+test('Project copy is independent and renews layout IDs',()=>{const p=M.section('One','page');p.blocks[0].grid.element=M.element('list');const q=M.copyPage(p,'two','Two');assert.notEqual(p.blocks[0].id,q.blocks[0].id);assert.notEqual(p.blocks[0].grid.id,q.blocks[0].grid.id);assert.notEqual(p.blocks[0].grid.element.items[0].id,q.blocks[0].grid.element.items[0].id);q.blocks[0].grid.element.items[0].text='Changed';assert.notEqual(p.blocks[0].grid.element.items[0].text,'Changed');});
+test('Asset paths preserve readable names and subfolders',()=>assert.equal(M.path('game','images','breakdowns/shaders','Frost study.webp'),'assets/game/images/breakdowns/shaders/Frost study.webp'));
+for(const folder of ['../outside','a/../../outside','C:/bad','./bad','bad?name'])test('Reject unsafe folder '+folder,()=>assert.throws(()=>M.path('game','images',folder,'cover.webp')));
+test('Protect root names and type folders',()=>{assert.throws(()=>M.path('../game','images','','x'));assert.throws(()=>M.path('game','config','','x'));});
+test('Sanitize uploaded filenames',()=>assert.equal(M.path('game','images','','file:unsafe?.png'),'assets/game/images/file-unsafe-.png'));
+test('Reject duplicate section IDs',()=>{const d=M.fresh();d.sections=[M.section('A'),M.section('A')];assert.ok(M.validate(d).length);});
+test('Detect dangling navigation and project pages',()=>{const d=M.fresh(),s=M.section('A');s.grid.element=M.element('button');s.grid.element.action.target='missing';d.sections=[s];assert.match(M.validate(d).join(),/Missing action/);});
+test('All component types are serializable and have appearance + visibility',()=>{for(const t of ['text','button','image','video','gallery','code','sketchfab','contact','dropdown','list','spacer','divider']){const e=M.element(t);assert.equal(e.enabled,true);assert.ok(e.style);assert.deepEqual(JSON.parse(JSON.stringify(e)),e);}});
+test('Unique generated IDs over 4000 components',()=>{const set=new Set();for(let i=0;i<4000;i++)set.add(M.element('text').id);assert.equal(set.size,4000);});
+test('Random positive weighted grids preserve ratios',()=>{for(let i=0;i<100;i++){const a=1+Math.floor(Math.random()*98),s=M.section('a');M.split(s,s.grid.id,'columns',[a,100-a]);assert.deepEqual(M.validate({...M.fresh(),sections:[s]}),[]);}});
+test('JSON assignment parser round-trip preserves code, Unicode, and closing tags',()=>{const v={code:'</script>\n// → test;\nconst value = "x";',description:'It’s a test'};const script='// config\nwindow.PortfolioConfig = '+JSON.stringify(v,null,2).replace(/</g,'\\u003c')+';\n';const match=script.match(/window\.PortfolioConfig\s*=\s*([\s\S]+?)\s*;?\s*$/);assert.deepEqual(JSON.parse(match[1]),v);});
+console.log('\n'+count+' model tests passed.');
