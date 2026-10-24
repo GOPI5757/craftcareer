@@ -40,3 +40,27 @@ body.inspector-hidden .workspace{grid-template-columns:minmax(0,1fr)}body.inspec
 body {display:grid;grid-template-rows:auto minmax(0,1fr);}
 body > .workspace {position:relative;height:100%!important;min-height:0;}
 @media(max-width:650px){#right-panels{top:0;}}
+
+/* Section actions are editor chrome, outside the website iframe. */
+#section-actions {display:flex;align-items:center;gap:6px;padding:5px 16px;flex-shrink:0;min-width:0;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);}
+#section-actions select {min-width:90px;max-width:220px;flex:1;}
+#section-actions button,#section-actions select {font-size:12px;min-height:30px;padding:5px 9px;white-space:nowrap;}
+#section-remove {color:var(--danger);}
+body.browse-mode #section-actions,body.full-view #section-actions {display:none;}
+body.full-view {grid-template-rows:minmax(0,1fr);}
+body.full-view .app-header {position:fixed;right:12px;top:12px;width:auto;height:auto;min-height:0;padding:0;background:transparent;border:0;z-index:40;box-shadow:none;}
+body.full-view .app-header>*:not(.preview-controls),body.full-view .preview-controls>*:not(#full-view) {display:none!important;}
+body.full-view .preview-controls {padding:0;border:0;background:none;}
+body.full-view #full-view {background:var(--panel);box-shadow:var(--shadow);opacity:.8;}
+body.full-view #full-view:hover {opacity:1;}
+body.full-view #frame-wrap {outline:none;box-shadow:none;border:0;}
+body.full-view .workspace {height:100dvh!important;}
+
+body.full-view #frame-wrap,body.full-view #preview {width:100%!important;height:100%!important;}
+body.full-view #preview {transform:none!important;}
+
+.website-settings-launch {white-space:nowrap;border-color:var(--accent);font-weight:600;}
+.history-controls {display:flex;gap:4px;flex:none;}.history-controls button {font-size:20px;min-width:32px;padding:4px 7px;}
+.app-header .document-name {display:none;}
+@media(max-width:1250px){.app-header{gap:6px;padding-inline:10px;}.brand{font-size:16px;}.brand-icon{width:32px;height:32px;}.app-header .preview-controls{gap:4px;}.website-settings-launch{font-size:12px;padding:7px}.preview-controls select{max-width:115px;}}
+@media(max-width:1000px){.app-header{height:auto;min-height:68px;flex-wrap:wrap;}.app-header .preview-controls{flex:1 1 auto;}.brand{margin-right:auto;}}

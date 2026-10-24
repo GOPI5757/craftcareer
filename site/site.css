@@ -216,7 +216,7 @@ details.subsection {display:block;}
 .edit-site .split-tools {left:50%;right:auto;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:90%;pointer-events:none;}
 .edit-site .split-tools button {pointer-events:auto;background:#171e2aee;}
 .edit-site .cell-tools {opacity:.3;transition:opacity .12s;}
-.edit-site .layout-cell:hover>.cell-tools,.edit-site .layout-cell.is-selected>.cell-tools,.edit-site .cell-tools:focus-within {opacity:1;}
+
 .radius-overlay {position:fixed;inset:0;overflow:clip;z-index:1000;pointer-events:none;font:12px/1.3 system-ui;color:#fff;}
 .radius-overlay[hidden],.radius-handle[hidden] {display:none;}
 .radius-outline {position:absolute;border:1px solid #7bcaff;box-shadow:0 0 0 1px #0007;pointer-events:none;}
@@ -225,3 +225,57 @@ details.subsection {display:block;}
 .radius-handle {position:absolute;width:18px;height:18px;min-width:18px;min-height:18px;border-radius:50%;border:3px solid #eef8ff;background:#208fc7;box-shadow:0 0 0 1px #163b57,0 1px 5px #000b;padding:0;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;cursor:nwse-resize;}
 .radius-handle.corner-topRight,.radius-handle.corner-bottomLeft {cursor:nesw-resize;}
 .radius-handle:hover,.radius-handle:focus-visible {background:#ff6586;outline:2px solid #fff;outline-offset:3px;}
+
+/* Only the cell under the pointer and the current selection reveal tools. */
+.edit-site .layout-cell > .cell-tools {opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s;}
+.edit-site .layout-cell.is-hovered > .cell-tools {opacity:.45;visibility:visible;}
+.edit-site .layout-cell.is-selected > .cell-tools,.edit-site .layout-cell > .cell-tools:focus-within {opacity:1;visibility:visible;}
+.edit-site .layout-cell > .cell-tools button {pointer-events:inherit;}
+.edit-site .layout-cell.is-hovered > .cell-tools button,.edit-site .layout-cell.is-selected > .cell-tools button,.edit-site .layout-cell > .cell-tools:focus-within button {pointer-events:auto;}
+.edit-site .leaf > .cell-tools {left:50%;right:auto;top:5px;transform:translateX(-50%);max-width:calc(100% - 48px);}
+.edit-site .cell-tools button {font-size:12px!important;min-height:28px!important;padding:.25rem .55rem!important;white-space:nowrap;}
+.edit-site .cell-divider {opacity:0;}
+.edit-site .is-hovered > .cell-divider {opacity:.45;}
+.edit-site .is-selected > .cell-divider,.edit-site .cell-divider:focus-visible {opacity:1;}
+.radius-handle {width:12px;height:12px;min-width:12px;min-height:12px;border-width:2px;}
+.edit-site::after {display:none;}
+.portfolio-button:hover {color:var(--hover-color,inherit)!important;}
+.portfolio-button:active {color:var(--click-color,var(--hover-color,inherit))!important;background:var(--click-bg,var(--hover-bg,#294d40))!important;}
+
+.edit-site .empty-cell {opacity:0;visibility:hidden;}
+.edit-site .is-hovered > .empty-cell {opacity:.45;visibility:visible;}
+.edit-site .is-selected > .empty-cell {opacity:1;visibility:visible;}
+
+.edit-site .add-project,.edit-site .add-subsection {opacity:0;visibility:hidden;}
+.edit-site .is-hovered-section .add-project,.edit-site .is-hovered-section .add-subsection {opacity:.45;visibility:visible;}
+.edit-site .is-selected-section .add-project,.edit-site .is-selected-section .add-subsection,.edit-site .add-project:focus-visible,.edit-site .add-subsection:focus-visible {opacity:1;visibility:visible;}
+
+.edit-site .layout-cell > .cell-tools {transition:none;}
+
+/* Resize frames leave typography intact and stay inside their grid tracks. */
+.has-frame-size {max-width:100%;max-height:100%;min-width:0;min-height:0!important;overflow:auto;}
+.component.has-frame-size:not(.item-list) {display:flex;flex-direction:column;}
+.component-image.has-frame-size>.image-frame {flex:1;min-height:0;height:0!important;width:100%;}
+.component-video.has-frame-size>.video-frame,.component-sketchfab.has-frame-size>iframe,.component-code.has-frame-size>pre {flex:1;min-height:0;height:0!important;max-height:100%!important;}
+.component-gallery.has-frame-size>.gallery-panel {flex:1;min-height:0;overflow:hidden;}
+.component-gallery.has-frame-size>.gallery-panel>img {height:100%!important;max-height:100%;}
+.component-dropdown.has-frame-size>select {height:100%;width:100%;}
+.component-divider.has-frame-size {justify-content:center;}
+.portfolio-button {flex-shrink:0;overflow:auto;}
+.size-overlay {position:fixed;inset:0;z-index:990;pointer-events:none;overflow:clip;}
+.size-edge {position:absolute;transform:translate(-50%,-50%);padding:0;border:0;background:transparent;pointer-events:auto;touch-action:none;min-width:0;min-height:0;}
+.size-edge::after {content:'';position:absolute;width:6px;height:6px;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid #e6f5ff;background:#174d70;opacity:.35;}
+.size-edge:hover::after,.size-edge:focus-visible::after {opacity:1;}
+.size-left,.size-right {cursor:ew-resize;}.size-top,.size-bottom {cursor:ns-resize;}
+.size-edge[hidden] {display:none;}
+.edit-site .split-hovered>.split-tools,.edit-site .split-hovered>.cell-divider {visibility:visible;opacity:.45;}
+.edit-site .split-hovered>.split-tools button {pointer-events:auto;}
+.edit-site .split.is-selected>.split-tools {opacity:1;}
+
+.cell-blend-layer {position:absolute;z-index:5;pointer-events:none;overflow:hidden;isolation:isolate;}
+.blend-plane {position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.cell-blend-layer [data-editor-only],.cell-blend-layer .cell-tools,.cell-blend-layer .cell-divider {display:none!important;}
+.cell-blend-toggle {position:absolute;z-index:12;transform:translate(-50%,-50%);padding:0!important;min-width:24px!important;width:24px;height:24px;min-height:24px!important;border-radius:50%!important;background:#172330!important;color:#e6f7ff!important;border:1px solid #77aac9!important;font:16px system-ui!important;visibility:hidden;opacity:0;}
+.cell-blend-toggle[aria-pressed=true] {background:#306175!important;}
+.split-hovered>.cell-blend-toggle,.is-hovered>.cell-blend-toggle {visibility:visible;opacity:.5;}
+.is-selected>.cell-blend-toggle,.cell-blend-toggle:focus-visible,.cell-blend-toggle:hover {visibility:visible;opacity:1;}

@@ -2,6 +2,7 @@
 window.CRAFTCAREER_CONFIG = {
   accent: '#ef6477',
   defaultTheme: 'dark',
+  publishing: { enabled: true, apiBase: '/api/github', pollSeconds: 8 },
   // Creator help only; not included in portfolios exported by your users.
   tutorial: {
     enabled: true,

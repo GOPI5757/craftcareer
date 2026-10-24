@@ -1,24 +1,35 @@
-# CraftCareer canvas and corner update — verification
+# CraftCareer GitHub publishing update — verification
 
-110 checks: 30 model tests, 11 responsive-layout tests, and 69 browser regression checks.
+Date: 24 October 2026.
 
-## New coverage
+## Automated checks
 
-- Edit and Browse have matching section, cell, component, navigation, and project-card rectangles at 1280, 768 and 390 pixel viewport widths. Editor controls add no page height, padding or grid tracks.
-- Four circular handles, linked changes, independent changes, inward/outward dragging, zero and maximum bounds, pointer cancellation, touch input, keyboard controls and retained keyboard focus.
-- One undo step per completed drag, redo, live inspector values, reset controls, correct targeting of image borders/cells/backgrounds, section reordering and preserved preview scroll.
-- Canvas controls stay within desktop, tablet, phone and small-phone previews. All editing controls disappear in Browse and in exported portfolios.
-- Independent corner settings render in exported portfolios at desktop, tablet and mobile widths. Config files, per-device overrides, ZIP export/reimport and legacy scalar-only radii are checked.
-- Interactive verification includes actual mouse dragging of an image handle, unlocking corners, changing one corner, and checking the corresponding inspector values.
+- 31 GitHub service integration checks using Node's HTTP server and a simulated GitHub API.
+- 24 browser publishing checks using the actual creator, ZIP import/export, publishing UI and service against that simulated API.
+- 30 existing document/model checks.
+- 11 existing responsive-layout checks.
+- 111 existing browser editor regression checks.
 
-## Retained coverage
+Total: **207 checks**. The test commands and browser harnesses are included; see the package README.
 
-- Inspector first/last fields with all groups expanded and hierarchy resizing, across 1440×900, 1280×720, 1024×600, 768×600, 390×844 and 600×360 editor windows.
-- Preview top/bottom reachability across multiple editor sizes and desktop/tablet/mobile previews; the editor workspace uses CSS sizing to avoid a delayed header measurement clipping its bottom.
-- Split ownership and nesting, preserved ratios and contents, 2,000 randomized split adjustments, assets and path updates, image borders/blending, portrait fitting, section archives, replacement/swapping, tutorial availability, and export/import compatibility.
+## Publishing coverage
 
-## Reproduce
+OAuth state/PKCE and cookie binding; token/secret exclusion from client responses; same-origin and CSRF enforcement; safe generated-file paths; upload size/hash validation; creating a public repository; keeping unrelated repositories untouched; preserving unmanaged files; removing obsolete managed assets; concurrent-head conflict detection; no force push; no repository deletion; incremental uploads; repeatable finish/unpublish; Pages main/root configuration; build status matched to the current commit; unpublish/republish; token revocation failure recovery; disconnected and expired sessions.
 
-Run `node verification/model.test.js` and `node verification/layout.test.js`. Serve this extracted folder locally and open `verification/index.html` for the browser suite. It creates isolated drafts and generated fixtures. Background browser tabs may slow the tests; keep the test page active until it reports DONE.
+Browser checks cover confirmation/cancellation, actual generated config/runtime uploads, asset references including spaces and Archive, excluding unused assets, live links, export with public repository metadata but no credentials, reimporting the published ZIP, mobile editing destination persistence, compact dialog width, and restoring editing after closing the dialog.
 
-This is targeted coverage in the current Chromium browser, not a guarantee for every possible browser and content combination. Network-backed YouTube and Sketchfab embeds retain their existing requirements.
+The existing editor regression suite covers canvas/split controls, sizing, linked and individual corner radii, seam blending, inspector scrolling, section controls, responsive overrides, assets, ZIP import/export, component fields, button states, and undo/redo.
+
+## Visual and package checks
+
+- Publishing dialog inspected in the browser with a simulated connected account and completed deployment.
+- Missing-credentials setup state checked using the production startup command.
+- JavaScript syntax and package startup checked.
+- Final ZIP extracted, integrity checked, and tests run against the extracted copy.
+- Existing runtime, model, layout, resources, icons and tutorial retained from the previous update. Changes are limited to publishing integration, its header control, related documentation and tests.
+
+## Limits of verification
+
+No real GitHub credentials were supplied. **A real GitHub authorization and public Pages deployment were not performed.** GitHub calls were tested against a local simulation of the documented APIs. The service still requires the owner's OAuth app credentials and a Node-capable host; its account permissions, hosting proxy, GitHub limits and deployment behavior must be verified after setup.
+
+The simulated account and repository shown in the preview screenshot are test fixtures, not an actual hosted portfolio. No claim of a bug-free system or guaranteed GitHub uptime is made.
