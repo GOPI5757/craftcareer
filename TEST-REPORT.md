@@ -8,10 +8,14 @@ Date: 25 October 2026.
 - 30 document/model checks — passed.
 - 11 responsive-layout checks — passed.
 - 111 existing browser editor regression checks — passed.
-- 24 new browser editing checks — passed.
-- 29 browser publishing checks against the local simulated GitHub service — passed.
+- 25 browser editing checks — passed.
+- 30 browser publishing checks against the local simulated GitHub service — passed.
 
-Total: **243 passing checks**. See README.md for reproducible commands and browser harness URLs.
+Total: **245 passing checks**. See README.md for reproducible commands and browser harness URLs.
+
+## Controls and publishing-link update
+
+The active Isolate label now uses the contrasting accent ink color. Split, Edit split, remove-component and blend buttons retain readable screen sizes as the preview zoom changes; checks cover editor widths of 1440, 1024 and 800 pixels. The published address is above the action buttons and is blue and underlined in both themes. The compact shared section/context row is retained. Server files, auth settings, configuration schema, tutorial and portfolio content are unchanged.
 
 ## Editing coverage
 

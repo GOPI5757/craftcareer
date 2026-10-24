@@ -2,3 +2,10 @@
 
 
 .github-project-list{display:grid;gap:.6rem;max-height:45vh;overflow:auto}.github-project-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem;border:1px solid var(--line);border-radius:.5rem}.github-project-row strong{overflow-wrap:anywhere}.publish-live{padding:.8rem;border:1px solid var(--accent);border-radius:.5rem;overflow-wrap:anywhere}#publish-dialog progress:not([value]){accent-color:var(--accent)}
+
+/* The live address is the first destination, above publishing actions. */
+.publish-live {margin-top:16px;}
+.publish-live .publish-link {display:inline;padding:0;border:0;border-radius:0;color:#79b8ff;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
+body[data-theme=light] .publish-live .publish-link {color:#075dcc;}
+.publish-live .publish-link:hover {text-decoration-thickness:2px;}
+.publish-live .publish-link:focus-visible {outline:2px solid currentColor;outline-offset:4px;}

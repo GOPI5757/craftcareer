@@ -300,3 +300,10 @@ details.subsection {display:block;}
 .edit-site .leaf > .cell-tools {left:25%;right:auto;max-width:calc(100% - 48px);}
 .isolate-stage {grid-template-columns:minmax(0,1fr);}
 .isolate-cell-host {min-width:0;width:min(var(--isolated-width,100%),100%);}
+
+/* Canvas actions stay at a comfortable screen size while the portfolio scales. */
+.edit-site .cell-tools {gap:calc(6px * var(--editor-ui-scale,1));}
+.edit-site .cell-tools button {font-size:calc(14px * var(--editor-ui-scale,1))!important;line-height:1.2!important;min-height:calc(34px * var(--editor-ui-scale,1))!important;padding:calc(6px * var(--editor-ui-scale,1)) calc(10px * var(--editor-ui-scale,1))!important;}
+.edit-site .leaf > .cell-tools {width:max-content;max-width:none;top:calc(5px * var(--editor-ui-scale,1));}
+.edit-site .remove-component {min-width:calc(34px * var(--editor-ui-scale,1))!important;font-size:calc(20px * var(--editor-ui-scale,1))!important;padding:0!important;}
+.edit-site .cell-blend-toggle {width:calc(34px * var(--editor-ui-scale,1));height:calc(34px * var(--editor-ui-scale,1));min-width:calc(34px * var(--editor-ui-scale,1))!important;min-height:calc(34px * var(--editor-ui-scale,1))!important;font-size:calc(21px * var(--editor-ui-scale,1))!important;}

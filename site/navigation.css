@@ -65,9 +65,17 @@ body.full-view .workspace {height:100dvh!important;}
 @media(max-width:1250px){.app-header{gap:6px;padding-inline:10px;}.brand{font-size:16px;}.brand-icon{width:32px;height:32px;}.app-header .preview-controls{gap:4px;}.website-settings-launch{font-size:12px;padding:7px}.preview-controls select{max-width:115px;}}
 @media(max-width:1000px){.app-header{height:auto;min-height:68px;flex-wrap:wrap;}.app-header .preview-controls{flex:1 1 auto;}.brand{margin-right:auto;}}
 
-/* A stable context strip outside the website, like a document editor. */
-#context-toolbar {height:66px;min-height:66px;flex:none;padding:5px 12px;border-block:1px solid var(--line);background:var(--panel);overflow:hidden;}
+/* Section and element controls share one row outside the website. */
+.canvas-control-row {display:flex;align-items:center;height:66px;min-height:66px;flex:none;min-width:0;border-bottom:1px solid var(--line);background:var(--panel);overflow:hidden;}
+.canvas-control-row #section-actions {height:100%;max-width:55%;flex:0 1 auto;border-bottom:0;border-right:1px solid var(--line);overflow-y:hidden;}
+.canvas-control-row #section-actions select {flex:0 0 clamp(90px,12vw,220px);}
+.canvas-control-row #section-actions button {flex:none;}
+#context-toolbar {height:100%;min-width:0;flex:1;padding:5px 12px;background:var(--panel);overflow:hidden;}
+body.browse-mode .canvas-control-row,body.full-view .canvas-control-row {display:none;}
 #context-toolbar #floating-toolbar {position:static;width:100%;max-width:100%;height:54px;max-height:none;border:0;box-shadow:none;border-radius:0;overflow-x:auto;overflow-y:hidden;padding:0;align-items:center;}
+#context-toolbar #floating-toolbar {scrollbar-width:thin;}
+#context-toolbar #floating-toolbar::-webkit-scrollbar {height:6px;}
+#context-toolbar #floating-toolbar label {gap:1px;line-height:12px;}
 #floating-toolbar label {flex:none;}#floating-toolbar .toolbar-empty {font-size:12px;color:var(--muted);}
 body.browse-mode #context-toolbar,body.full-view #context-toolbar {display:none;}
 .preview-viewport {align-items:center;justify-content:center;}#frame-wrap {align-self:center;}
@@ -77,7 +85,7 @@ body.browse-mode #context-toolbar,body.full-view #context-toolbar {display:none;
 .list-item-choice {display:flex;align-items:center;gap:8px;text-align:left;min-height:34px;}.list-item-choice>span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
 .list-item-choice.active {background:color-mix(in srgb,var(--accent) 18%,var(--panel));border-color:var(--accent);}
 .item-number {font:600 11px ui-monospace,monospace;opacity:.75;}.list-item-editor {padding:10px;}.list-item-editor>.array-heading{position:sticky;top:-14px;background:var(--panel);z-index:4;padding:6px 0;}
-#isolate-mode.active {color:var(--accent);border-color:var(--accent);}#isolate-mode:disabled{opacity:.4;}
+#isolate-mode.active {color:var(--accentInk);border-color:var(--accent);}#isolate-mode:disabled{opacity:.4;}
 /* Keep the extra Isolate control in the existing single header. */
 @media(min-width:1001px) and (max-width:1500px){
  .app-header{flex-wrap:nowrap;gap:6px;padding:8px 10px;min-height:64px;}
