@@ -4,6 +4,10 @@
 
 Create a responsive portfolio from sections, grids, and components. Everything you create is saved as editable configuration when you export your website.
 
+## Editing update
+
+See **../UPDATE-GUIDE.md** for the docked toolbar, Shift resize, vertical alignment, compact list editing, Ctrl+D, Ctrl+1 isolation, additional icons, and reopening portfolios from GitHub.
+
 ## GitHub publishing update
 
 The new **Publish** button supports connection, publishing, updates, live links, unpublishing and disconnecting. These functions require the included Node service and your registered GitHub OAuth app. See **GITHUB-SETUP.md**. Editing and ZIP export still work without that service.

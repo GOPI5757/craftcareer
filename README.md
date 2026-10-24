@@ -1,6 +1,6 @@
 # CraftCareer · By Gopinath
 
-This package adds GitHub Pages publishing to the existing CraftCareer creator. The editor, tutorial, configuration-based export, layout controls and asset library are retained.
+This update improves canvas resizing, text and list editing, isolation, preview consistency and GitHub publishing navigation. The existing tutorial, config-based exports, asset library and authentication setup are retained. See **UPDATE-GUIDE.md** for every new control and deployment instructions.
 
 ## Start here
 
@@ -24,6 +24,6 @@ The creator’s Publish button is separate from Settings. Creator-level options 
 
 ## Tests
 
-Run `npm test` for service, model and layout checks. Run `npm run test:browser`, then visit `http://localhost:18988/browser.html` for publishing integration checks and `/regression.html` for editor regression checks. The browser test server uses synthetic accounts and repositories held in memory; it never calls GitHub. **Do not deploy the test server.**
+Run `npm test` for service, model and layout checks. Run `npm run test:browser`, then visit `http://localhost:18988/browser.html` for publishing integration checks and `/regression.html` for editor regression checks. Open `/verification/editing.html` for the new editing, isolation, spacing, shortcut and export checks. The browser test server uses synthetic accounts and repositories held in memory; it never calls GitHub. **Do not deploy the test server.**
 
 For the detailed existing editor instructions, see `site/README.md`.

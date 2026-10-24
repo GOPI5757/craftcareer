@@ -1,9 +1,11 @@
 {
   "name": "craftcareer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "CraftCareer portfolio creator with GitHub Pages publishing",
-  "engines": { "node": ">=22.9" },
+  "engines": {
+    "node": ">=22.9"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env server/server.mjs",
     "test": "node tests/server.test.mjs && node site/verification/model.test.js && node site/verification/layout.test.js",

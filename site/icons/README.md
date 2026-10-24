@@ -34,3 +34,5 @@ Persist `id` values in config files. Supported IDs are `mi:name`, `brand:name`, 
 To regenerate after editing the catalog, run `node icons/build-icons.cjs` from the creator directory. To verify coverage against the actual bundled font, run `node icons/verify-icons.cjs`. The latter independently decodes the WOFF2 character map and checks every catalog glyph.
 
 Keep `icons.js` and this license folder in distributed creator packages. Exported sites need `icons.js` plus the license notices; the separate font/SVG originals are optional because the script already contains their data.
+
+Additional social, publishing and collaboration logos are bundled from Simple Icons 11.14.0 (CC0-1.0), the same licensed source as the original brand library. Brand names and logos remain subject to their respective trademark policies.

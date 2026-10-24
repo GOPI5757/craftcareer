@@ -131,7 +131,7 @@ await check('Image effects stay bounded in cover and fit-cell modes on all previ
   fill('Image fit','cover');fill('Fit component to cell',true,group('Cell layout'));fill('Width · rem',2,group('Image border'));fill('Radius · rem',20,group('Image border'));await wait(140);
   const e=pd().querySelector('[data-cell="'+cells()[2].id+'"].layout-cell'),r=e.getBoundingClientRect(),v=e.querySelector('.image-visual').getBoundingClientRect();
   assert(v.right<=r.right+1&&v.bottom<=r.bottom+1&&v.left>=r.left-1&&v.top>=r.top-1,'Image effect escaped cell at '+device);
-  assert(pd().documentElement.scrollWidth<=Number(device)+1,'Image horizontal overflow');
+  assert(pd().documentElement.scrollWidth<=pw().innerWidth+1,'Image horizontal overflow');
  }
  q('#device').value='1280';q('#device').dispatchEvent(new w.Event('change'));selectCell(sid,cells()[2].id);
  fill('Fit component to cell',false,group('Cell layout'));fill('Image fit','contain');fill('Width · rem',.2,group('Image border'));fill('Radius · rem',1,group('Image border'));fill('Tint color (optional)','#7755dd',group('Image edge blending'));

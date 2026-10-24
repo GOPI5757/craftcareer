@@ -115,7 +115,7 @@ button { cursor: pointer; }
 .section-edit, .add-project { background: #263e33; border: 1px solid #719581; border-radius: 0.4rem; padding: 0.4rem 0.7rem; font: 0.75rem system-ui; }
 .section-edit { position: absolute; top: 0.3rem; left: 0.3rem; z-index: 8; }.hidden-cell { opacity: 0.45; }
 @media(max-width: 64rem) { .project-cards { grid-template-columns: repeat(var(--tablet-columns),minmax(0,1fr)); }.project-browser:has(.filter-checkbox) { grid-template-columns: 1fr; }.filter-checkbox { display:flex; flex-wrap:wrap; grid-column:1; grid-row:1; }.filter-checkbox + .project-cards,.filter-checkbox + .project-content { grid-row:2; } }
-@media(max-width: 48rem) { .layout-cell.columns[data-mobile=stack] { grid-template-columns: minmax(0,1fr); grid-template-rows: none; }.layout-cell.rows { grid-template-rows: none; }.section-fit { min-height:calc(100svh - var(--nav-height,0rem));height:auto; }.portfolio-section { padding: min(1.2rem,4vw) !important; }.component-text { font-size: min(var(--text-size, 5rem), 8vw); }.project-cards { grid-template-columns: repeat(var(--mobile-columns),minmax(0,1fr)); }.project-card.hover .card-content { opacity:1; position:static; }.contact-dock { top:auto;bottom:0;max-width:75vw; }.site-nav { padding:0.6rem 1rem; }.item-list { max-height:none !important; flex-direction:row !important; }.lightbox { padding:1rem; }.component img { max-height:70svh; }.content-pop .portfolio-section { padding-top:3rem !important; } }
+@media(max-width: 48rem) { .layout-cell.columns[data-mobile=stack] { grid-template-columns: minmax(0,1fr); grid-template-rows: none; }.layout-cell.rows { grid-template-rows: none; }.section-fit { min-height:calc(100svh - var(--nav-height,0rem));height:auto; }.portfolio-section { padding: min(1.2rem,4vw) !important; }.component-text { font-size: min(var(--text-size, 5rem), 8vw); }.project-cards { grid-template-columns: repeat(var(--mobile-columns),minmax(0,1fr)); }.project-card.hover .card-content { opacity:1; position:static; }.contact-dock { top:auto;bottom:0;max-width:75vw; }.site-nav { padding:0.6rem 1rem; }.lightbox { padding:1rem; }.component img { max-height:70svh; }.content-pop .portfolio-section { padding-top:3rem !important; } }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; }* { transition:none !important; animation:none !important; } }
 
 /* CraftCareer responsive canvas. Edit controls never participate in the grid. */
@@ -279,3 +279,24 @@ details.subsection {display:block;}
 .cell-blend-toggle[aria-pressed=true] {background:#306175!important;}
 .split-hovered>.cell-blend-toggle,.is-hovered>.cell-blend-toggle {visibility:visible;opacity:.5;}
 .is-selected>.cell-blend-toggle,.cell-blend-toggle:focus-visible,.cell-blend-toggle:hover {visibility:visible;opacity:1;}
+
+/* Editing refinement: controls do not change portfolio geometry. */
+.item-list {align-items:flex-start;align-content:flex-start;justify-content:flex-start;}
+.item-list > * {margin:0;}
+.item-list .list-image > p {margin:0;}
+.portfolio-button.icon-only {gap:0;justify-content:center;align-items:center;}
+.size-edge::after {width:var(--marker-size,8px);height:var(--marker-size,8px);opacity:1;background:#fff;border:1.5px solid #287bb5;border-radius:1px;}
+.size-edge:hover::after,.size-edge:focus-visible::after {background:#ff7890;outline:2px solid #fff;}
+.size-top-left,.size-bottom-right {cursor:nwse-resize;}
+.size-top-right,.size-bottom-left {cursor:nesw-resize;}
+.size-overlay {z-index:1002;}
+.edit-site .remove-component {color:#ffc5cf!important;}
+.isolate-stage {min-height:100svh;width:100%;display:grid;place-items:center;overflow:auto;padding:2rem;}
+.isolate-cell-host {position:relative;flex:none;max-width:100%;outline:1px dashed #72839b;}
+.isolate-cell-host>.layout-cell {width:100%;height:100%;}
+
+/* Keep corner editing above resize hit areas; reserve the quarter edge for cell actions. */
+.radius-overlay {z-index:1004;}
+.edit-site .leaf > .cell-tools {left:25%;right:auto;max-width:calc(100% - 48px);}
+.isolate-stage {grid-template-columns:minmax(0,1fr);}
+.isolate-cell-host {min-width:0;width:min(var(--isolated-width,100%),100%);}

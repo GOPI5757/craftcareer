@@ -1,45 +1,34 @@
-# CraftCareer sizing and blending update — verification
+# CraftCareer 1.2 — verification report
 
-152 checks: 30 model tests, 11 responsive-layout tests, and 111 browser regression checks.
+Date: 25 October 2026.
 
+## Results
 
-## New sizing and blending coverage
+- 38 server integration checks — passed.
+- 30 document/model checks — passed.
+- 11 responsive-layout checks — passed.
+- 111 existing browser editor regression checks — passed.
+- 24 new browser editing checks — passed.
+- 29 browser publishing checks against the local simulated GitHub service — passed.
 
-- Standalone Website settings/Undo/Redo header actions; always-visible button dimensions and Fit checkbox.
-- Canvas resizing for all 13 content component types (Navigation bar remains a section), flexible sections and content subsection grids. Cell bounds and fixed section heights remain intact.
-- Button content-sized minimum, unchanged label font, custom width/height, Fit restoration, real mouse edge drag, cancellation and one Undo/Redo step per completed drag.
-- Four distinct corner handles on 20×1, 1×12 and 1×1 rem components.
-- Third-child hover exposes parent split controls; every adjacent pair has a blend toggle; toggle Undo and configurable blend width.
-- Row/column blends, desktop/tablet/mobile rendering, hidden-child matching, inert snapshots, preserved snapshot geometry, and suppression of stretched foreground text.
-- Configuration export/reimport and copied-page blend ID remapping. The same resources are embedded in preview and exported websites.
-- Visual inspection of image/color transitions and foreground labels. Blend load events from inert copies are ignored to prevent repeated redraws.
+Total: **243 passing checks**. See README.md for reproducible commands and browser harness URLs.
 
-## Clean canvas coverage
+## Editing coverage
 
-- Hidden idle tools, faint hover controls, selected controls at full opacity, outside clicks and Escape to clear selection.
-- Compact split labels with ownership tooltips; 12px corner handles do not overlap the centered Split button.
-- Section actions outside the website frame, remove confirmation, insertion after the selected section, zero padding on new sections, and preservation of configured padding on reimport.
-- Full view fills the window width and height, uses unscaled rendering and follows actual responsive breakpoints; exit restores the editing device/mode. Resize coverage includes 1600, 768 and 390 CSS pixels.
-- Button hover and pressed text/background colors, shared list button states, Undo/Redo and configuration export/reimport.
-- Real pointer verification confirms the exact hover, held/pressed and released colors in the published renderer.
+Eight resize handles; screen-space hit targets; small-component handle separation; Shift aspect ratio; Undo/Redo and cancellation; full-cell edge reachability; corner controls above resize hit areas; docked toolbar geometry; numeric scrubbing; split-count scrubbing; vertical text alignment; underline; zero-gap lists; compact item selection and inspector scrolling; Ctrl+D duplicate identity and style; typing field shortcut exclusions; arrow-key alignment; isolation and return to a lower-page scroll position; remove confirmation and Undo; icon-only buttons; transparent hover/pressed fills; local social icons; favicon/title; config export/import round trips.
 
-## Retained corner coverage
+Desktop Edit, Browse and Full view logical rectangles were compared directly. The existing viewport suite covers 1920×1080, 1366×768, 1024×768, 768×900, 390×844 and 600×360 editor sizes with desktop/tablet/mobile previews, both scroll ends and inspector reachability. Full view also adapts when the browser is resized.
 
-- Edit and Browse have matching section, cell, component, navigation, and project-card rectangles at 1280, 768 and 390 pixel viewport widths. Editor controls add no page height, padding or grid tracks.
-- Four circular handles, linked changes, independent changes, inward/outward dragging, zero and maximum bounds, pointer cancellation, touch input, keyboard controls and retained keyboard focus.
-- One undo step per completed drag, redo, live inspector values, reset controls, correct targeting of image borders/cells/backgrounds, section reordering and preserved preview scroll.
-- Canvas controls stay within desktop, tablet, phone and small-phone previews. All editing controls disappear in Browse and in exported portfolios.
-- Independent corner settings render in exported portfolios at desktop, tablet and mobile widths. Config files, per-device overrides, ZIP export/reimport and legacy scalar-only radii are checked.
-- Interactive verification includes actual mouse dragging of an image handle, unlocking corners, changing one corner, and checking the corresponding inspector values.
+## Publishing coverage
 
-## Retained coverage
+Existing OAuth state, PKCE, bound HttpOnly cookie, same-origin/CSRF, upload hash/size and repository ownership checks still pass. No auth scope or environment variable was added. Tests cover managed-file preservation, atomic commits, conflict detection, no force push or repository deletion, Pages state and external unpublish, session expiry, rapid dialog close/reopen, disconnect, deployment progress, safe links and unchanged public repository association.
 
-- Inspector first/last fields with all groups expanded and hierarchy resizing, across 1440×900, 1280×720, 1024×600, 768×600, 390×844 and 600×360 editor windows.
-- Preview top/bottom reachability across multiple editor sizes and desktop/tablet/mobile previews; the editor workspace uses CSS sizing to avoid a delayed header measurement clipping its bottom.
-- Split ownership and nesting, preserved ratios and contents, 2,000 randomized split adjustments, assets and path updates, image borders/blending, portrait fitting, section archives, replacement/swapping, tutorial availability, and export/import compatibility.
+Reopening tests cover portfolio discovery, private/non-admin exclusion, invalid identity, managed config/asset restrictions, commit-pinned blob reads after subsequent repository edits, byte/hash verification, arbitrary-file refusal, opening a previous destination after choosing a separate copy, and publishing back to that destination.
 
-## Reproduce
+## Visual and package verification
 
-Run `node verification/model.test.js` and `node verification/layout.test.js`. Serve this extracted folder locally and open `verification/index.html` for the browser suite. It creates isolated drafts and generated fixtures. Background browser tabs may slow the tests; keep the test page active until it reports DONE.
+The actual creator was inspected in the browser, including selected-element resize controls, the fixed context strip, isolation and the single compact desktop header. Browser tests use the production editor and shared runtime resources. JavaScript syntax and resource consistency were checked. The delivery ZIP is integrity-checked and extracted for the Node test suites.
 
-This is targeted coverage in the current Chromium browser, not a guarantee for every possible browser and content combination. Network-backed YouTube and Sketchfab embeds retain their existing requirements.
+## Verification limits
+
+The GitHub tests use a local HTTP service with simulated GitHub responses. No real GitHub OAuth login, production repository modification, or public Pages deployment was performed during this update. Existing authentication configuration is retained. Real GitHub availability, API quotas, browser-reserved shortcuts and host deployment timings remain external dependencies; tests are not a guarantee that every possible website configuration is bug-free.

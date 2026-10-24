@@ -4,7 +4,7 @@
  const uid=p=>p+'-'+(globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)).slice(0,12);
  const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'section';
  const surface=()=>({enabled:true,background:['#10151e'],backgroundAngle:135,opacity:1,borderWidth:0,borderColor:'#354052',borderRadius:0,radiusLinked:true,radiusCorners:null,image:'',imageEnabled:true,imageOpacity:1,imageFit:'cover',imagePosition:'center',edgeFade:{enabled:false,color:'#10151e',width:10},video:'',videoEnabled:false,overlay:{enabled:true,background:['#10151e'],backgroundAngle:135,opacity:0.2}});
- const style=()=>({fontFamily:'',fontSize:1,color:'#e9edf5',fontWeight:400,fontStyle:'normal',textAlign:'left',lineHeight:1.55,letterSpacing:0,padding:0,borderWidth:0,borderColor:'#354052',borderRadius:0.5,radiusLinked:true,radiusCorners:null,background:[],backgroundAngle:135,opacity:1});
+ const style=()=>({fontFamily:'',fontSize:1,color:'#e9edf5',fontWeight:400,fontStyle:'normal',textDecoration:'none',verticalAlign:'top',textAlign:'left',lineHeight:1.55,letterSpacing:0,padding:0,borderWidth:0,borderColor:'#354052',borderRadius:0.5,radiusLinked:true,radiusCorners:null,background:[],backgroundAngle:135,opacity:1});
  const action=()=>({type:'section',target:'',url:'',downloadName:''});
  function element(type){const e={id:uid('element'),type,enabled:true,style:style()};switch(type){
  case'text':Object.assign(e,{text:'Tell your story.',tag:'p'});break;

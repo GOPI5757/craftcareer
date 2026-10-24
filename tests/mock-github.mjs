@@ -13,6 +13,7 @@ export function mockGitHub(){
   if(u.pathname==='/login/oauth/access_token')return response(200,{access_token:'test-token-not-for-client',scope:'repo',token_type:'bearer'});
   if(u.pathname.startsWith('/applications/')){if(revokeFails)throw Error('test network outage');return response(204);}
   if(u.pathname==='/user')return response(200,{id:7,login:'student'});
+  if(u.pathname==='/user/repos'&&method==='GET'){const page=Number(u.searchParams.get('page')||1),per=Number(u.searchParams.get('per_page')||20);return response(200,[...repos.values()].slice((page-1)*per,page*per));}
   if(u.pathname==='/user/repos'&&method==='POST'){if(repos.has(b.name))return response(422,{});return response(201,makeRepo(b.name));}
   const m=u.pathname.match(/^\/repos\/student\/([^/]+)(.*)$/);if(!m)return response(404,{});const name=decodeURIComponent(m[1]),r=repos.get(name),p=decodeURIComponent(m[2]);if(!r)return response(404,{});
   const tree=()=>trees.get(commits.get(r.head).tree.sha);
@@ -20,9 +21,10 @@ export function mockGitHub(){
   if(p.startsWith('/contents/')){const path=p.slice(10);if(method==='PUT'){writeFile(name,path,Buffer.from(b.content,'base64'));return response(201,{commit:{sha:r.head}});}const id=tree().get(path);return id?response(200,{content:blobs.get(id).toString('base64')}):response(404,{});}
   if(p==='/git/ref/heads/main')return response(200,{object:{sha:r.head}});
   if(p==='/git/refs/heads/main'&&method==='PATCH'){if(!commits.has(b.sha))return response(422,{});r.head=b.sha;return response(200,{object:{sha:r.head}});}
+  if(p.startsWith('/git/blobs/')&&method==='GET'){const id=p.slice(11),bytes=blobs.get(id);return bytes?response(200,{sha:id,size:bytes.length,encoding:'base64',content:bytes.toString('base64')}):response(404,{});}
   if(p==='/git/blobs'&&method==='POST')return response(201,{sha:storeBlob(Buffer.from(b.content,'base64'))});
   if(p==='/git/trees'&&method==='POST'){const next=new Map(trees.get(b.base_tree));for(const f of b.tree){if(f.sha===null)next.delete(f.path);else next.set(f.path,f.content===undefined?f.sha:storeBlob(f.content));}const id=key();trees.set(id,next);return response(201,{sha:id});}
-  if(p.startsWith('/git/trees/'))return response(200,{truncated:false,tree:[...trees.get(p.slice(11))].map(([path,sha])=>({path,sha,type:'blob'}))});
+  if(p.startsWith('/git/trees/'))return response(200,{truncated:false,tree:[...trees.get(p.slice(11))].map(([path,sha])=>({path,sha,type:'blob',mode:'100644',size:blobs.get(sha).length}))});
   if(p==='/git/commits'&&method==='POST'){const c={sha:key(),tree:{sha:b.tree},parents:b.parents};commits.set(c.sha,c);return response(201,c);}
   if(p.startsWith('/git/commits/'))return response(200,commits.get(p.slice(13)));
   if(p==='/pages'){if(method==='GET')return response(r.pages?200:404,r.pages||{});if(method==='DELETE'){r.pages=null;return response(204);}r.pages={...b,html_url:`https://student.github.io/${name}/`};return response(method==='POST'?201:204,method==='POST'?r.pages:undefined);}

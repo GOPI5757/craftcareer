@@ -2,7 +2,7 @@
   "materialCount": 2234,
   "requestedMaterialCount": 616,
   "missingRequestedMaterial": [],
-  "brandCount": 19,
+  "brandCount": 45,
   "originalSymbols": [
     "wireframe-cube",
     "git-branch",
@@ -11,7 +11,7 @@
     "favicon",
     "marmoset-toolbag"
   ],
-  "total": 2259,
+  "total": 2285,
   "fontBytes": 128352,
-  "libraryBytes": 511531
+  "libraryBytes": 536881
 }
