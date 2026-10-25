@@ -1,4 +1,4 @@
-# CraftCareer Help — 1.6.0
+# CraftCareer Help — 1.6.1
 
 ## For users
 
@@ -20,6 +20,10 @@ The owner requested free help without depending on a limited AI service. The off
 
 No account, external AI integration, API key or paid fallback was added. Once the creator's files have loaded, this guide does not need a network request to answer. This does not guarantee uptime of the website's hosting service.
 
+## Animated answers
+
+Answers appear progressively at a fast typing pace (normally 180 characters per second, at most six seconds for a long answer). Key controls and terms are bold with an accent underline. The beginning of the answer stays visible; typing does not continually scroll to the bottom. Use **Read more** or scroll yourself to read further. Sending another question completes the previous answer; New chat cancels it. Closing help completes typing without changing the answer. Reduced-motion preferences show the answer immediately.
+
 ## Configuration and maintenance
 
 In `site/creator-config.js`:
@@ -27,6 +31,8 @@ In `site/creator-config.js`:
 - `helpChat.enabled`: show or hide the guide.
 - `helpChat.title`: chat heading.
 - `helpChat.useSelection`: default selection-context setting.
+- `helpChat.typingEffect`: enable/disable animation.
+- `helpChat.typingSpeed`: characters per second, clamped to 30–500 (default 180).
 - `helpChat.maxMessages`: bounded visible history (8–60 messages).
 - `designAssistant.showLauncher`: defaults to false. Set true to restore From image. `designAssistant.enabled` remains true so its existing API and tools remain available for development.
 

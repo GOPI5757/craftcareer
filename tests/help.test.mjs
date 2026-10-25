@@ -23,7 +23,7 @@ import {start} from '../server/server.mjs';
 test('Production server delivers the new help files and keeps existing routes',async()=>{
  const server=start({origin:'http://localhost:8787'});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  try{const origin='http://127.0.0.1:'+server.address().port;
- for(const path of ['/help-chat.js','/help-engine.js','/help-knowledge.js','/help-chat.css']){const r=await fetch(origin+path);assert.equal(r.status,200);assert.ok((await r.text()).length>100);}
+ for(const path of ['/help-chat.js','/help-presentation.js','/help-engine.js','/help-knowledge.js','/help-chat.css']){const r=await fetch(origin+path);assert.equal(r.status,200);assert.ok((await r.text()).length>100);}
  const html=await(await fetch(origin+'/')).text();for(const file of ['help-chat.js','help-engine.js','help-knowledge.js','help-chat.css','design-assistant.js'])assert.ok(html.includes(file),file);
  const session=await(await fetch(origin+'/api/github/session')).json();assert.equal(session.connected,false);assert.equal(session.configured,false);
  const unknown=await fetch(origin+'/api/help/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});assert.equal(unknown.status,405,'No unconfigured external chat endpoint exists');

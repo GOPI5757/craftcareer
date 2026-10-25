@@ -1,3 +1,7 @@
+# CraftCareer 1.6.1 — chat presentation update
+
+Help replies now type progressively and highlight important controls and terms. Long replies retain their starting position with a Read more button. No server/environment changes are needed. Image analysis remains preserved and hidden.
+
 # CraftCareer 1.6.0 help update
 
 Choose **? Help** for the free, local built-in guide. From image is hidden; its code is retained. See ../HELP-GUIDE.md for behaviour and configuration, and ../TEST-REPORT.md for this release's verification limits.

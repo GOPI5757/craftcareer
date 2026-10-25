@@ -1,3 +1,7 @@
+# CraftCareer 1.6.1 — chat presentation update
+
+Help replies now type progressively and highlight important controls and terms. Long replies retain their starting position with a Read more button. No server/environment changes are needed. Image analysis remains preserved and hidden.
+
 # Installing CraftCareer 1.6.0
 
 Replace the release files in your creator repository and redeploy. Keep existing Render environment variables, GitHub OAuth and domain settings. No new backend configuration, dependency, API key or paid service is required. Export important drafts first.
