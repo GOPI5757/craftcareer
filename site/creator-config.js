@@ -2,6 +2,8 @@
 window.CRAFTCAREER_CONFIG = {
   accent: '#ef6477',
   defaultTheme: 'dark',
+  // Local OCR and layout rules are bundled. Browser-native vision AI is optional.
+  designAssistant: { enabled: true, maxFileMB: 20 },
   publishing: { enabled: true, apiBase: '/api/github', pollSeconds: 8 },
   // Creator help only; not included in portfolios exported by your users.
   tutorial: {

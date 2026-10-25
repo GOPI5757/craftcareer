@@ -17,6 +17,7 @@ createServer(async(req,res)=>{try{
  }
  if(path==='/__test__/built'){for(const name of mock.repos.keys())mock.finishBuild(name);res.end('{}');return;}
  if(path==='/__test__/state'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({repositories:[...mock.repos.values()].map(r=>({name:r.name,pages:!!r.pages,marker:JSON.parse(mock.readFile(r.name,'.craftcareer-publish.json')||'null'),config:mock.readFile(r.name,'config/site.js')?.toString()}))}));return;}
+ if(['/verification/design.html','/verification/design.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.split('/').pop()));return;}
  if(['/browser.html','/browser.js','/regression.html','/regression.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.slice(1)));return;}
  await app.handler(req,res);
  }catch(e){res.statusCode=500;res.end(e.message);}

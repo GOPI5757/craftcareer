@@ -69,3 +69,7 @@ All authored settings remain ordinary JSON-compatible fields inside exported con
 - Cell alignment stays in `align`; responsive patches stay in `deviceOverrides`.
 
 Isolation, selection, editing markers and the context toolbar are creator controls and are never included in the exported website content. The existing export schema and section folder structure are unchanged.
+
+## Updating to 1.4 — image-to-layout assistant
+
+Deploy the updated source package, including `site/vendor/ocr-6.0.1/`. Existing environment variables and GitHub OAuth settings stay the same. There are no new secrets or paid AI endpoints. The server change only adds cache headers for the versioned local recognition resources. Existing portfolio config files remain compatible. See DESIGN-ASSISTANT.md.

@@ -1,4 +1,4 @@
-# CraftCareer 1.3 verification report
+# CraftCareer 1.4 verification report
 
 Date: 25 October 2026.
 
@@ -6,7 +6,7 @@ Date: 25 October 2026.
 
 | Suite | Passing checks |
 |---|---:|
-| GitHub service integration | 39 |
+| GitHub service integration and OCR caching | 41 |
 | Shared canvas service | 21 |
 | Document/model | 30 |
 | Responsive layout | 11 |
@@ -14,7 +14,9 @@ Date: 25 October 2026.
 | Browser editing and viewport | 25 |
 | Browser publishing with simulated GitHub | 30 |
 | Browser collaboration, assets and new controls | 22 |
-| **Total** | **289** |
+| Image analysis / grid compiler | 14 |
+| Browser image assistant, real OCR and generated publishing | 31 |
+| **Total** | **336** |
 
 See README.md for commands and browser harness URLs. The delivery ZIP is checked for integrity, every packaged file is compared with the tested source, and the Node suites are run again from the extracted package.
 
@@ -45,3 +47,15 @@ The real editor was inspected in the browser. The selected-element toolbar share
 ## Verification limits
 
 GitHub tests use a local HTTP service with simulated GitHub responses. No real OAuth login, production repository modification or public Pages deployment was performed for this update. Sharing tests run on the local included server, not a production Render instance. Host restarts, live API availability, quotas and deployment latency remain external dependencies. Tests do not guarantee that every possible user-authored configuration is bug-free.
+
+## Image-to-layout assistant
+
+The real bundled OCR engine was exercised on a dark design with text, an illustration and a colored button, and a light design with dark text. Tests cover type/size validation, bounded geometry, text/paragraph grouping, media detection, button recognition, correction controls, exclusion, manual region creation, uploaded files, cancellation before and during recognition, preview reopen, independent tablet/mobile layouts, unique IDs, preserved original sections and publishing association, single-step undo/redo, and view-only refusal.
+
+Generated layouts were rendered at 320, 390, 768 and 1280 pixels and checked for horizontal overflow, narrow columns and clipped text. The assistant dialog was checked at a narrow viewport and the additional header control was checked for reachability. Generated image assets and section config files survived export/re-import and the existing simulated GitHub publishing flow. AI model files were excluded from the exported portfolio.
+
+The native browser vision adapter has mock contract checks for multimodal input, constrained output, validation and session cleanup. The actual native model was unavailable in the test browser, so its real image-understanding quality is not claimed as tested. The default local OCR path was tested with actual inference, not mocked recognition.
+
+Visual review confirmed the reference/result comparison and manual application into three real editor sections. Recognition and layout remain approximate; source text, typography and mobile flow need user review. This is not a trained-from-scratch general vision model or a guarantee of reproducing every design.
+
+The AI browser harness is under tests/, served only by the local test server at /verification/design.html. It refuses to run without that server's synthetic test endpoint. It is excluded from the production Docker build.
