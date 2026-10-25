@@ -6,3 +6,5 @@ Private user screenshots are excluded from the release ZIP.
 - `/guided.html` needs `guided-reference.png`: Screenshot 2026-10-25 212357.png, 2557 × 1338, with a black navigation header, orange landscape, GAME ARTIST / Portfolio title and three social buttons at bottom left.
 
 Place those files in this folder before running the local browser test server. These are exact-fixture tests, not a claim of universal reconstruction accuracy. The synthetic tests at `/verification/design.html` and the Node tests run without either private file.
+
+The optional technical-reference.png is the user-supplied technical artist screenshot. It is deliberately excluded from the release ZIP. Place your authorized original here to run /technical.html.

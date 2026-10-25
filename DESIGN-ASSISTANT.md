@@ -59,3 +59,7 @@ There is no AI billing integration or per-generation charge. Users supply their 
 Deploy the complete updated `site/` and `server/` folders. Version 1.5 changes the sharing API as well as the creator. Keep your existing environment variables, GitHub app credentials, custom domain and OAuth callback settings. No additional API keys, database or AI server are required. Do not copy `.env.example` over your real deployment settings.
 
 Primary implementation references: [Tesseract.js API](https://github.com/naptha/tesseract.js/blob/master/docs/api.md), [local Tesseract installation](https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md), [Chrome Prompt API](https://developer.chrome.com/docs/ai/prompt-api).
+
+## 1.5.1 changes
+
+Repeated aligned buttons now become one list, with editable labels, actions, spacing, shared style and individual overrides. Uncertain lettering can stay as text for correction or be retained as an image; the latter preserves appearance, not text editability. The decorative background is a review choice. Imported desktop dimensions and list gaps follow the reference scale. Choose Review regions → Save reviewed example to download the screenshot plus versioned annotations locally. This does not train a model or upload your image. See TRAINING-STATUS.md for the training boundary and research notes.

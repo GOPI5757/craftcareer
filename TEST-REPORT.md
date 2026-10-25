@@ -1,58 +1,49 @@
-# CraftCareer 1.5.0 verification report
+# CraftCareer 1.5.1 verification report
 
 Date: 26 October 2026.
 
-## Completed checks
+## Checks run for this update
 
 | Suite | Passing checks |
 |---|---:|
 | GitHub service integration and OCR caching | 41 |
-| Existing shared-canvas service | 21 |
-| New sharing roles, revocation and presence service | 16 |
-| Document/model | 30 |
+| Shared-canvas service | 21 |
+| Document model | 30 |
 | Responsive layout model | 11 |
-| Image analysis and grid compiler | 20 |
-| Guided classification and image proportions | 9 |
+| Image analysis and compiler | 20 |
+| Guided review | 9 |
+| Recognition, grouping and generated layout regression | 7 |
+| Sharing roles, revocation and presence | 16 |
 | Browser editor regression | 111 |
 | Browser editing and viewport | 25 |
-| Browser publishing with simulated GitHub | 30 |
-| Browser canvas controls and asset workflows | 16 |
-| Browser guided sharing, recovery and responsive header | 20 |
-| Browser image assistant, real OCR and export/publishing | 33 |
-| Earlier supplied image: fidelity, export and re-import | 20 |
-| Latest supplied image: navigation, three icon buttons and geometry | 20 |
-| **Total** | **423** |
+| Browser assistant, OCR, export and simulated publishing | 33 |
+| Earlier artist reference: geometry, export and reopening | 20 |
+| Artist reference: navigation, logo and social-button list | 20 |
+| Technical-artist reference: portrait, review, button list, export and reopening | 26 |
+| **Total** | **390** |
 
-The production JavaScript and test scripts pass syntax checks. Embedded preview/export resources match the current CSS, layout, runtime and icon source files. Packaging checks verify ZIP integrity and every included file against the tested source. Node suites are rerun from the extracted delivery package.
+The seven recognition regression tests include 2,000 seeded generated layout cases. These exercise rows/columns, item counts, gaps, independent assets, configuration round trips, valid splits and desktop/tablet/mobile variants. They are synthetic geometry tests, **not 2,000 website screenshots, model training or evidence of universal visual accuracy**.
 
-## Image review
+The Node suites pass on the working source and are rerun from the extracted release ZIP. ZIP integrity and every packaged file are verified against the tested source. Preview/export resources match their runtime, CSS, layout and icon source files.
 
-The actual supplied artist-portfolio reference is processed by the bundled OCR engine. The header links are proposed as navigation, the header mark as a logo/image, and the three lower-left social controls as buttons. Each requires an explicit multiple-choice answer. After confirmation they become ordinary editable navigation, image and button components. The large title and small labels stay within their bounds; image assets use contained/proportional rendering.
+## Actual reference-image checks
 
-The browser tests also use a different dark layout with an illustration and colored button, and a light layout with dark text. Detector tests vary control placement across left/right/top/bottom and vertical groups, and include dark borders on a light background. Questions are reversible without duplicate controls. Unanswered reviews cannot be applied. Manual marking, correction, cancellation, device previews, Undo/Redo, unique section IDs, asset export, re-import and preserved existing content are checked.
+The supplied technical-artist image is processed with the bundled OCR engine and local visual detector. It produces an independent portrait candidate, a full-width uncertain-lettering review, and a four-button group. In the tested review path, the reviewer chooses to preserve the stylized lettering as an image, confirms a button list, and retains the decorative background. The result contains movable portrait/lettering image components, editable role text, and one ordinary list containing Portfolio, About Me, Contact and Resume. Choosing an image preserves appearance; it does not make the lettering editable text.
 
-The assistant was inspected visually, including the cropped multiple-choice controls and reconstructed page. Expanded review controls remain reachable at laptop dimensions. The private screenshots used for exact-image tests are excluded from the release ZIP.
+The technical layout has no horizontal page overflow and its button labels remain within their bounds at widths of 320, 390, 768, 1280 and 1600 pixels. Exported section configuration contains the list, assets and styles. Reopening that ZIP preserves the sections exactly and passes validation. Manual selection in the editor reaches the list and its individual item inspector.
 
-This does not establish universal reconstruction accuracy. Local OCR and visual rules can still misread or miss a component. Cropped symbols are image assets, not recreated vectors, and links require user-specified destinations. Background cleanup is approximate. Real browser-native vision AI was unavailable on this test device; its adapter is tested with controlled responses, not a live model.
+The earlier artist references are also rechecked. Their navigation and logo remain separate, and the three lower-left social controls compile into one row list with individual image assets. The general browser assistant checks include light/dark examples, cancellation, review, independent device layouts, asset export, re-import, Undo/Redo and preserved pre-existing content.
 
-## Sharing and recovery
+## Reviewed examples
 
-Each generated link has a separate token and role. Owner-only listing, generation and deletion are enforced at the service. Viewer and Instance editor links cannot write; Helper links can. Independent copies use frozen snapshots and separate local drafts. Revoking one link does not revoke the others. Delete-all blocks active viewer/helper access and future independent imports, while imported independent drafts remain editable after reload.
+Unanswered review questions prevent example export. A completed review exports the working reference PNG, a versioned annotation JSON and a SHA-256 source hash. The annotation explicitly says `human-reviewed-proposal`. The operation is local; no upload or automatic model learning occurs.
 
-Helpers must enter a name before the editing UI opens. Both sides receive named remote cursors, with Owner enforced by the service; own cursors are omitted. Invalid coordinates, excessive updates, expiry and disconnected-cursor cleanup are tested. Presence does not change document revisions. Revocation during an in-flight content or cursor submission is rechecked before accepting it.
+## Scope and limits
 
-Concurrent owner/helper edits preserve both local versions and require explicit conflict resolution. Owner reload restores the same room and Sent links. Snapshot comparison ignores object-key ordering while retaining real content differences. Opening another portfolio disconnects that browser before replacing its workspace. Sharing credentials, names/cursors and publishing metadata do not appear in exported configuration.
+No new model was trained and no external screenshot corpus was downloaded. See TRAINING-STATUS.md for what was attempted, the remaining data/training stages and references. Browser-native vision AI was unavailable on this test device; this release's actual-image checks use OCR and visual rules. No 99.9% accuracy claim is made.
 
-Sharing still uses single-process, memory-only rooms with a 24-hour maximum lifetime. Restarting or redeploying the server ends active links. It is complete-revision synchronization, not character-level automatic merging. See SHARING.md.
+OCR can still misread stylized text, decorative features can be mistaken for controls, and missing elements may need manual marking. Unknown fonts, hidden background pixels, original URLs, hover behavior and responsive rules cannot be recovered reliably from one screenshot. Background cleanup remains approximate. Reviewed images and logos are crops, not reconstructed vectors.
 
-## Creator interface and regression
+Publishing, sharing service/client, cursor collaboration, tutorial, icon library, Dockerfile and environment template are byte-for-byte unchanged from 1.5.0. Service tests and local simulated publishing pass; no real GitHub repository or deployed service was modified. Existing single-process, memory-only sharing limitations remain documented in SHARING.md.
 
-Header and menu bounds are checked at 1024×768, 1280×720, 1366×768, 1536×695, 1920×1080 and 2560×1440. The Workspace menu stays alongside Publish, including on wrapped laptop headers. The inspector, canvas and menu remain inside the viewport. Older tests also cover mobile and very short windows, including 600×360. Very short windows reserve the right panel for inspector controls.
-
-Prior checks cover resizing and Shift proportions, independent corner handles, keyboard focus, inspector scroll ends, disclosure preservation, split editing, cell blends, Edit/Browse/Full-view geometry, isolation, item lists, colors, asset upload/move/rename, project controls, device overrides, config export and re-import.
-
-## Publishing and scope
-
-GitHub integration checks use the local mock service: OAuth state/PKCE, CSRF, ownership checks, atomic commits, update/rebuild status, reopening portfolios, unpublish, republish and disconnect. No real GitHub login, production repository modification or public deployment was performed in this update. The GitHub service, publisher, environment template, Dockerfile and setup guide are unchanged from the preceding release.
-
-The existing tutorial and icon library are retained. No paid AI endpoint or new dependency has been added. Automated checks cover these fixtures and workflows; they cannot guarantee that every possible design or user configuration is bug-free.
+Private reference PNGs and local test logs are excluded from the delivery package. Real-image harnesses require the developer to supply those fixtures as described in tests/fixtures/README.md. No credentials or private environment file are packaged.

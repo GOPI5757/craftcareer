@@ -39,7 +39,9 @@
         tsv+='\n'+extra.data.tsv.split('\n').slice(1).filter(Boolean).map(line=>{const a=line.split('\t');a[2]=String(Number(a[2])+(index+1)*1000);for(const j of [6,7,8,9])a[j]=String(Number(a[j])/scale);a[7]=String(Number(a[7])+Math.round(top*ocr.height)/scale);return a.join('\t');}).join('\n');
       }
       const buttons=[];await worker.setParameters({tessedit_pageseg_mode:'7'});
-      if(extraBands)for(const [index,r]of D.inkGroups(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height)).entries()){
+      const ink=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height),paper=D.pixels(ink).dominant(0,0,ink.width,ink.height);
+      for(let i=0;i<ink.data.length;i+=4){const v=Math.hypot(ink.data[i]-paper[0],ink.data[i+1]-paper[1],ink.data[i+2]-paper[2])>25?0:255;ink.data[i]=ink.data[i+1]=ink.data[i+2]=v;}
+      if(extraBands)for(const [index,r]of D.inkGroups(ink).entries()){
         check(signal);const part=E('canvas',{width:Math.round(r.w*ocr.width),height:Math.round(r.h*ocr.height)});part.getContext('2d').drawImage(ocr,r.x*ocr.width,r.y*ocr.height,r.w*ocr.width,r.h*ocr.height,0,0,part.width,part.height);
         let extra=await Promise.race([worker.recognize(part,{}, {text:true,tsv:true}),stopped]),usedScale=scale;
         if(extra.data.confidence<65){const s=Math.min(3,2200/(r.w*canvas.width)),fallback=E('canvas',{width:Math.round(r.w*canvas.width*s),height:Math.round(r.h*canvas.height*s)}),g=fallback.getContext('2d');g.filter='grayscale(1) invert(1) contrast(1.5)';g.drawImage(original,r.x*canvas.width,r.y*canvas.height,r.w*canvas.width,r.h*canvas.height,0,0,fallback.width,fallback.height);
@@ -87,24 +89,26 @@
     if(backdrop)ctx.putImageData(new ImageData(D.letteringMask(image,backdrop),canvas.width,canvas.height),0,0);
     else {for(const r of media)ctx.fillRect(r.x*canvas.width,r.y*canvas.height,r.w*canvas.width,r.h*canvas.height);
     if(bg.reduce((a,b)=>a+b,0)<384){const pixels=ctx.getImageData(0,0,clean.width,clean.height);for(let i=0;i<pixels.data.length;i+=4){pixels.data[i]=255-pixels.data[i];pixels.data[i+1]=255-pixels.data[i+1];pixels.data[i+2]=255-pixels.data[i+2];}ctx.putImageData(pixels,0,0);}}
-    const {tsv,buttons} = await readText(clean, signal, progress,buttonRegions,!!backdrop,canvas); check(signal);
+    const {tsv,buttons} = await readText(clean, signal, progress,buttonRegions,true,canvas); check(signal);
     diagnostics({tsv,backdrop});
     progress('Finding image regions and building editable groups', .85);
     await new Promise(resolve => setTimeout(resolve, 0)); check(signal);
     const plan = D.fromOCR(tsv, image);
+    plan.referenceLayout=true;
     // Texture can resemble letters. Discard OCR hits contained in a detected picture.
     if(!backdrop)plan.regions=plan.regions.filter(t=>!media.some(r=>t.x+t.w*.5>=r.x&&t.x+t.w*.5<=r.x+r.w&&t.y+t.h*.5>=r.y&&t.y+t.h*.5<=r.y+r.h));
     else {plan.background='#'+D.pixels(image).dominant(0,0,canvas.width,Math.max(1,backdrop.y*canvas.height*.5)).map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
       plan.regions=plan.regions.filter(t=>t.confidence>=45&&/[a-zA-Z]{2}/.test(t.text)&&t.w*canvas.width>t.h*canvas.height*.7&&!(t.y>backdrop.y&&t.text.trim().length<=2&&t.w<.025));
-      const keep=[];for(const t of plan.regions.sort((a,b)=>b.confidence-a.confidence)){if(!keep.some(r=>Math.abs(r.x-t.x)<.015&&Math.abs(r.y-t.y)<.012))keep.push(t);}plan.regions=keep;
-      for(const r of plan.regions){r.type='text';r.background='';r.weight=400;r.sourceBox={x:r.x,y:r.y,w:r.w,h:r.h,color:r.color};
+    }
+    const keep=[];for(const t of plan.regions.sort((a,b)=>b.w-a.w||b.confidence-a.confidence)){if(!keep.some(r=>Math.abs(r.y-t.y)<.012&&Math.min(r.x+r.w,t.x+t.w)-Math.max(r.x,t.x)>Math.min(r.w,t.w)*.5))keep.push(t);}plan.regions=keep;
+      for(const r of plan.regions){r.type='text';r.background='';r.weight=400;r.sourceBox={x:r.x,y:r.y,w:r.w,h:r.h/1.5,color:r.color};
+        if(r.text.includes('\n')){r.sourceBox.h=r.h;continue;}
         ctx.font='100px Arial';const metrics=ctx.measureText(r.text),glyphH=r.h*canvas.height/1.5,glyphW=r.w*canvas.width-glyphH*.3,capHeight=(metrics.actualBoundingBoxAscent+metrics.actualBoundingBoxDescent)||75;
         const heightSize=glyphH/capHeight*100;const spaced=/^[A-Z\s/0-9·]+$/.test(r.text),size=spaced?Math.min(heightSize,glyphW/metrics.width*100):glyphW/metrics.width*100;r.fontSize=size*80/canvas.width;
         r.letterSpacing=spaced?Math.max(0,(glyphW-metrics.width*size/100)/Math.max(1,r.text.length-1))*80/canvas.width:0;
       }
-    }
     plan.regions=plan.regions.filter(t=>!buttons.some(r=>t.x+t.w/2>=r.x&&t.x+t.w/2<=r.x+r.w&&t.y+t.h/2>=r.y&&t.y+t.h/2<=r.y+r.h));
-    for(const r of buttons){const channels=r.background.match(/\w\w/g).map(v=>parseInt(v,16));plan.regions.push({...r,type:'button',color:channels.reduce((a,b)=>a+b,0)>440?'#101724':'#ffffff',fontSize:Math.max(.85,r.h*canvas.height/canvas.width*80*.4)});}
+    for(const r of buttons){const channels=r.background.match(/\w\w/g).map(v=>parseInt(v,16));plan.regions.push({...r,type:'button',align:'center',radius:r.h*canvas.height/canvas.width*40,color:channels.reduce((a,b)=>a+b,0)>440?'#101724':'#dddddd',fontSize:Math.max(.65,r.h*canvas.height/canvas.width*80*.4)});}
     plan.regions.push(...(backdrop?[...(backdrop.y>.02?[{...backdrop,y:0,h:backdrop.y,text:'Header artwork'}]:[]),backdrop]:media));plan.regions.sort((a,b)=>a.y-b.y||a.x-b.x);
     return R.propose(D.normalize(plan),image);
   }
@@ -138,7 +142,7 @@
   const refs = {};
   function message(text, error = false) {refs.status.textContent = text; refs.status.classList.toggle('design-error', error);}
   function cleanupURLs() {previewURLs.forEach(URL.revokeObjectURL); previewURLs = [];}
-  function setBusy(value) {busy = value; refs.analyse.disabled = value || !canvas; refs.native.disabled = value || !canvas || refs.native.dataset.available === 'unavailable'; refs.apply.disabled = value || refs.preview.dataset.valid!=='true' || !plan?.regions.some(r => r.enabled) || R.pending(plan).length>0; refs.cancel.hidden = !value; refs.file.disabled = value; refs.example.disabled = value; refs.manual.disabled = value || !canvas; refs.draw.disabled = value || !canvas; refs.review.inert = value;}
+  function setBusy(value) {busy = value;if(refs.exampleExport)refs.exampleExport.disabled=value||!plan||!canvas||R.pending(plan).length>0; refs.analyse.disabled = value || !canvas; refs.native.disabled = value || !canvas || refs.native.dataset.available === 'unavailable'; refs.apply.disabled = value || refs.preview.dataset.valid!=='true' || !plan?.regions.some(r => r.enabled) || R.pending(plan).length>0; refs.cancel.hidden = !value; refs.file.disabled = value; refs.example.disabled = value; refs.manual.disabled = value || !canvas; refs.draw.disabled = value || !canvas; refs.review.inert = value;}
   async function accept(file) {try {const next = await decode(file);if(!dialog.open)return;clearTimeout(previewTimer);previewSerial++;cleanupURLs();canvas=next; replacements.clear(); plan = null; selected = ''; refs.preview.dataset.valid='false';refs.name.value = (file.name || 'Design').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 60) || 'Design from image'; showReference(); refs.regions.replaceChildren(); refs.properties.replaceChildren(); refs.questions.replaceChildren(); refs.preview.srcdoc = ''; message('Image ready. Analyse it, or mark your own regions.'); setBusy(false);} catch (err) {message(err.message, true);}}
   function showReference() {if (!canvas) return; refs.image.src = canvas.toDataURL('image/png'); refs.image.hidden = false; refs.empty.hidden = true; drawBoxes();}
   function drawBoxes() {refs.boxes.replaceChildren(); for (const [i, r] of (plan?.regions || []).entries()) {if (!r.enabled) continue; const b = button(String(i + 1), () => selectRegion(r.id), 'design-region-box' + (r.id === selected ? ' selected' : '')); b.style.cssText = `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%;`; b.title = r.type + ': ' + (r.text || 'Image'); b.setAttribute('aria-label', 'Select region ' + (i + 1)); refs.boxes.append(b);}}
@@ -166,7 +170,7 @@
     const history=E('details',{class:'design-answer-history'},[E('summary',{text:'Previous answers'})]);for(const item of plan.questions.filter(q=>q.answer&&q.answer!=='mark'))history.append(button(item.label+' · '+item.options.find(o=>o[0]===item.answer)?.[1],()=>{item.answer='';refreshReview();}));bar.append(history);refs.questions.append(bar);
     if(!q)return;
     const box=q.box,thumb=E('canvas',{width:Math.max(1,Math.round(box.w*canvas.width)),height:Math.max(1,Math.round(box.h*canvas.height))});thumb.getContext('2d').drawImage(canvas,box.x*canvas.width,box.y*canvas.height,box.w*canvas.width,box.h*canvas.height,0,0,thumb.width,thumb.height);
-    const choices=E('div',{class:'design-question-choices'});for(const [value,label]of q.options)choices.append(button(label,()=>{plan=R.answer(plan,q.id,value);if(value==='mark'){refs.review.hidden=false;refs.reviewToggle.setAttribute('aria-expanded','true');draw=true;refs.draw.setAttribute('aria-pressed','true');refs.reference.classList.add('drawing');message('Mark the missing control on the reference, choose its type, then choose Yes, continue.');}else{draw=false;refs.reference.classList.remove('drawing');refs.draw.setAttribute('aria-pressed','false');}refreshReview();}));
+    const choices=E('div',{class:'design-question-choices'});for(const [value,label]of q.options)choices.append(button(label,()=>{plan=R.answer(plan,q.id,value);if(value==='mark'){refs.review.hidden=false;refs.reviewToggle.setAttribute('aria-expanded','true');draw=true;refs.draw.setAttribute('aria-pressed','true');refs.reference.classList.add('drawing');message('Mark the missing control on the reference, choose its type, then choose Yes, continue.');}else{draw=false;refs.reference.classList.remove('drawing');refs.draw.setAttribute('aria-pressed','false');message(R.pending(plan).length?'Answer the next question, then check the preview.':'Review complete. Check the result before adding it to your website.');}refreshReview();}));
     refs.questions.append(E('div',{class:'design-question-card'},[E('img',{src:thumb.toDataURL(),alt:'Area to classify',class:'design-question-thumb'}),E('div',{},[E('h3',{text:q.label}),choices])]));
   }
   function selectRegion(id) {selected = id; refs.review.hidden=false; refs.reviewToggle.setAttribute('aria-expanded','true'); refreshReview();}
@@ -214,6 +218,15 @@
     try {const media = await crops(canvas, plan,()=>true,replacements); const result = await CraftCareer.applyDesign(plan, media, refs.name.value.trim() || 'Design from image'); dialog.close(); document.dispatchEvent(new CustomEvent('craftcareer-design-applied', {detail: result}));}
     catch (err) {message(err.message, true);} finally {setBusy(false);}
   }
+  async function buildExample(source,reviewed){
+    if(!source||!reviewed||R.pending(reviewed).length)throw Error('Finish reviewing this design before saving an example.');
+    const example=D.normalize(reviewed),zip=new JSZip(),png=await new Promise(resolve=>source.toBlob(resolve,'image/png'));if(!png)throw Error('The reference could not be saved.');
+    const bytes=await png.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',bytes),hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+    zip.file('reference.png',bytes);zip.file('annotation.json',JSON.stringify({format:'craftcareer-reviewed-design',version:1,sourceSha256:hash,status:'human-reviewed-proposal',plan:example},null,2));
+    zip.file('README.md','# Reviewed CraftCareer example\n\nThis local example pairs the input image with the reviewed regions and decisions. It is not a trained model or independently verified ground truth. Check spelling, missing regions, grouping and geometry before using it as training data. Only share or train on images you own or are licensed to use. Keep related pages from the same website in the same dataset split. No example is uploaded automatically.\n');
+    return zip;
+  }
+  async function saveExample(){if(busy||!canvas||!plan)return;setBusy(true);try{const zip=await buildExample(canvas,plan),blob=await zip.generateAsync({type:'blob'}),url=URL.createObjectURL(blob),link=E('a',{href:url,download:'CraftCareer-Reviewed-Design.zip'});document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);message('Reviewed example saved on your device. Nothing was uploaded or used to train a model automatically.');}catch(e){message(e.message,true);}finally{setBusy(false);}}
   async function open() {
     await CraftCareer.ready; if (!CraftCareer.canEdit()) return;
     if (dialog?.open) return; originalFocus = document.activeElement;
@@ -233,6 +246,7 @@
     refs.cancel = button('Stop analysis', () => controller?.abort()); refs.cancel.hidden = true;
     refs.manual = button('Start manually', () => {ensurePlan();refs.review.hidden=false;refs.reviewToggle.setAttribute('aria-expanded','true'); refreshReview(); message('Use Mark a region, then drag a rectangle over the reference.');});
     refs.draw = button('＋ Mark a region', () => {if (!canvas) return; ensurePlan(); draw = !draw; refs.draw.setAttribute('aria-pressed', String(draw)); refs.reference.classList.toggle('drawing', draw); message(draw ? 'Drag over the reference to add a region. Select its component type below.' : 'Region drawing off.');});
+    refs.exampleExport=button('Save reviewed example',saveExample);refs.exampleExport.title='Save the reference and your corrections locally for a labelled dataset';
     refs.reference = E('div', {class: 'design-reference'}); refs.image = E('img', {alt: 'Uploaded design reference', hidden: true, draggable: false}); refs.boxes = E('div', {class: 'design-region-boxes'}); refs.empty = E('div', {class: 'design-empty'}, [E('span', {class: 'design-emblem', text: '✦'}), E('h3', {text: 'A design is your starting point.'}), E('p', {text: 'Upload a website screenshot. Turn its text, colors and image regions into editable CraftCareer components.'})]); refs.reference.append(refs.image, refs.boxes, refs.empty);
     const referenceScroll = E('div', {class: 'design-reference-scroll'}, refs.reference);
     referenceScroll.ondragover = e => {e.preventDefault();}; referenceScroll.ondrop = e => {e.preventDefault(); if (!busy && e.dataTransfer.files[0]) accept(e.dataTransfer.files[0]);};
@@ -244,7 +258,7 @@
     refs.device = E('select', {'aria-label': 'Generated preview device', onchange: schedulePreview}, [E('option', {value: 1280, text: 'Desktop'}), E('option', {value: 768, text: 'Tablet'}), E('option', {value: 390, text: 'Mobile'})]);
     refs.preview = E('iframe', {title: 'Generated layout preview', sandbox: 'allow-scripts allow-same-origin'}); refs.stage = E('div', {class: 'design-preview-stage'}, refs.preview);
     refs.regions = E('div', {class: 'design-regions'}); refs.properties = E('div', {class: 'design-properties'}); refs.count = E('strong', {text: '0 editable regions'});
-    refs.review = E('div', {class: 'design-review',hidden:true}, [E('div', {class: 'design-region-list'}, [E('div', {class: 'design-pane-heading'}, [refs.count, refs.draw]), refs.regions]), refs.properties]);
+    refs.review = E('div', {class: 'design-review',hidden:true}, [E('div', {class: 'design-region-list'}, [E('div', {class: 'design-pane-heading'}, [refs.count, refs.exampleExport, refs.draw]), refs.regions]), refs.properties]);
     refs.reviewToggle=button('Review regions',()=>{refs.review.hidden=!refs.review.hidden;refs.reviewToggle.setAttribute('aria-expanded',String(!refs.review.hidden));});refs.reviewToggle.setAttribute('aria-expanded','false');
     refs.questions=E('section',{class:'design-questions','aria-label':'Design review questions'});
     refs.status = E('div', {class: 'design-status', role: 'status', 'aria-live': 'polite', text: 'Your screenshot is analysed on this device. No AI key, account or per-image charge.'}); refs.method = E('span', {class: 'design-method', text: 'Local-first · English text recognition'}); refs.progress = E('progress', {max: 1, value: 0, hidden: true, 'aria-label': 'Design analysis progress'}); refs.notes = E('p', {class: 'design-notes', text: 'You will review an approximation before adding it. Existing sections stay unchanged. Cropped image assets are saved with the new sections.'}); refs.apply = button('Add editable layout →', apply, 'primary'); refs.apply.disabled = true;
@@ -262,5 +276,5 @@
   }
   const launch = button('✦ From image', open, 'design-launch'); launch.id = 'design-launch'; launch.title = 'Create an editable layout from a design image'; document.getElementById('open-assets').after(launch);
   // Public, deterministic analysis helpers also support the shipped regression harness.
-  window.CraftDesignAssistant = {open, decode, analyse, crops, sample, nativePlan, nativeAvailability};
+  window.CraftDesignAssistant = {open, decode, analyse, crops, sample, nativePlan, nativeAvailability,buildExample};
 })();

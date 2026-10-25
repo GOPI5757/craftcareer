@@ -1,6 +1,10 @@
+## 1.5.1 — recognition and editable lists
+
+Improves dark artwork detection, complete-line OCR review, proportional layout and repeated-button lists. Read [TRAINING-STATUS.md](TRAINING-STATUS.md) for exactly what was changed and what was not trained. Reviewed examples can be saved locally from the design assistant.
+
 # CraftCareer · By Gopinath
 
-Version **1.5.0** adds guided image review, a more spacious Workspace menu, independently managed sharing links, and named collaborator cursors. Existing editing, tutorials, GitHub publishing and configuration exports are retained.
+Version **1.5.1** improves image recognition and repeated-button lists. Guided review, the Workspace menu, sharing links, collaborator cursors, editing, tutorials, GitHub publishing and configuration exports are retained.
 
 ## Start here
 

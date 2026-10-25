@@ -6,6 +6,10 @@ Create a responsive portfolio from sections, grids, and components. Everything y
 
 ## Current update
 
+Version **1.5.1** improves dark artwork and repeated-button detection, uncertain-lettering review, proportional layouts, and button lists. It also lets you save reviewed examples locally. This is a recognition update, not a newly trained model. See **../TRAINING-STATUS.md** and **../TEST-REPORT.md**.
+
+### Earlier editing and publishing features
+
 Version 1.3 adds reliable Pages update builds, a separate Open GitHub button, right-drag copies, a Background shortcut, navbar height, custom scrollbars, project-card actions, safe asset renaming and temporary cclinks. See **../UPDATE-GUIDE.md** and **../SHARING.md**. Sharing and GitHub operations require the included Node server. Editing and ZIP export can still run locally.
 
 ## Editing update

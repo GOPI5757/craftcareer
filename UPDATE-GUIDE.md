@@ -1,3 +1,7 @@
+## Installing 1.5.1
+
+Replace the release files in your CraftCareer repository and let Render redeploy. Keep your existing Render environment variables and GitHub OAuth settings. Server routes and publishing credentials are unchanged. The release uses a new script version so browsers load the recognition update. Export important drafts as backups before updating.
+
 # CraftCareer 1.5 update
 
 ## Update your hosted creator

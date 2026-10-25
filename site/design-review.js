@@ -47,22 +47,26 @@ function propose(raw,image){let plan=D.normalize(raw),questions=[];const band=to
  // Details contained in a detected picture are reviewed together, not guessed as controls.
  const pictureGroups=[];for(const picture of plan.regions.filter(r=>r.type==='image')){const inside=clusters.filter(g=>g.every(r=>overlap(r,picture)>r.w*r.h*.9));if(inside.length>1){for(const g of inside)clusters.splice(clusters.indexOf(g),1);pictureGroups.push(inside.flat());}}clusters.push(...pictureGroups);
  for(const g of clusters){add('controls',g.length===1?'What is this small control?':'What are these small controls?',g.sort((a,b)=>a.y-b.y||a.x-b.x).map((r,i)=>({...r,type:'image',visual:'crop',text:'Control '+(i+1)})),buttonOptions);}
- for(const r of plan.regions.filter(r=>r.type==='button'&&!known.some(k=>overlap(k,r)>r.w*r.h*.3)))add('button','Is this a clickable button?',[r],[['buttons','Clickable button'],['text','Ordinary text'],['background','Background decoration']]);
+ const filled=plan.regions.filter(r=>r.type==='button'&&!known.some(k=>overlap(k,r)>r.w*r.h*.3));
+ for(const r of D.groupRepeats(filled,W,H))add('button',r.members?'Are these repeated clickable buttons?':'Is this a clickable button?',r.members||[r],[['buttons',r.members?'Button list':'Clickable button'],['text','Ordinary text'],['background','Background decoration']]);
  const uncertain=plan.regions.filter(r=>r.type==='text'&&(r.confidence<70||r.w*W<r.h*H*.7)&&!questions.some(q=>q.candidates.some(c=>overlap(c,r)>r.w*r.h*.3)));
- for(const r of uncertain.slice(0,12))add('uncertain','Is this text or decoration?',[r],[['text','Keep as editable text'],['images','Keep as images'],['background','Background decoration'],['omit','Leave out']]);
+ for(const r of uncertain.slice(0,12))add('uncertain','The lettering is uncertain. How should it be kept?',[{...r,h:r.sourceBox?.h||r.h}],[['text','Editable text — review spelling'],['images','Keep its exact appearance as an image'],['background','Background decoration'],['omit','Leave out']]);
+ if(plan.referenceLayout&&!plan.regions.some(r=>r.type==='background')&&plan.regions.some(r=>r.type==='image'))add('backdrop','Keep the decorative background from the reference?',[{type:'background',x:0,y:0,w:1,h:1,text:'Decorative background'}],[['artwork','Keep background artwork'],['background','Use a plain background color']]);
  // A final visual review catches controls that OCR cannot recognize at all.
  questions.push({id:'review-final',kind:'final',label:'Does the preview include every control you want to edit?',box:{x:0,y:0,w:1,h:1},candidates:[],options:[['ready','Yes, continue'],['mark','No, let me mark missing controls']],answer:''});
- plan.questions=questions;for(const q of questions)for(const r of plan.regions){if(r.type==='background')continue;if(q.candidates.some(c=>overlap(c,r)>r.w*r.h*.5)){r.enabled=false;r.reviewOwner=q.id;}}
+ plan.questions=questions;for(const q of questions)for(const r of plan.regions){if(r.type==='background'||q.kind==='backdrop')continue;if(q.candidates.some(c=>overlap(c,r)>r.w*r.h*.5)){r.enabled=false;r.reviewOwner=q.id;}}
  return plan;
 }
 function answer(raw,id,value){const plan=D.normalize(raw),q=plan.questions?.find(q=>q.id===id);if(!q||!q.options.some(o=>o[0]===value))throw Error('Choose one of the available answers.');q.answer=value;
  if(q.kind==='final')return plan;
+ if(value==='artwork')for(const r of plan.regions)if(r.enabled&&r.type==='image'&&!r.sourceBox)r.sourceBox={x:r.x,y:r.y,w:r.w,h:r.h,color:r.color,mode:'area'};
  plan.regions=plan.regions.filter(r=>r.reviewCreated!==id);for(const r of plan.regions)if(r.reviewOwner===id)r.enabled=false;
  if(value==='background')return plan;
  for(const [i,c]of q.candidates.entries()){
   const r={...c,reviewCreated:id,enabled:value!=='omit',sourceBox:{x:c.x,y:c.y,w:c.w,h:c.h,color:c.color||'#eeeeee',mode:c.visual==='crop'?'area':'letters'}};
   if(value==='navigation'||value==='buttons'){r.type='button';r.label=c.text||'Button '+(i+1);if(c.visual==='crop'){r.text='';r.visual='crop';}}
-  else if(value==='images'){r.type='image';r.visual='crop';r.sourceBox.mode='area';}
+  else if(value==='images'){r.type='image';r.visual='crop';r.sourceBox.mode='area';if(q.kind==='uncertain')r.text='Lettering from reference';}
+  else if(value==='artwork'){r.type='background';delete r.sourceBox;}
   else if(value==='text'){r.type='text';delete r.visual;}
   if(value==='omit'){r.sourceBox.mode='area';r.erase=true;}plan.regions.push(r);
  }

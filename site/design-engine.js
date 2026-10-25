@@ -9,17 +9,19 @@
   function normalize(input) {
     if (!input || !Array.isArray(input.regions)) throw Error('The analysis did not return an editable layout. Try local analysis or mark a region yourself.');
     if (input.regions.length > 80) throw Error('Use a smaller screenshot: at most 80 regions can be reviewed at once.');
+    const ids=new Set();let nextId=Math.max(0,...input.regions.map(r=>/^region-\d{1,7}$/.test(String(r.id))?Number(r.id.slice(7)):0))+1;
     const regions = input.regions.map((r, i) => {
       const x = clamp(r.x, 0, .99), y = clamp(r.y, 0, .995);
-      return {id: 'region-' + (i + 1), type: ['text', 'button', 'image', 'background'].includes(r.type) ? r.type : 'text',
+      const id=/^region-\d{1,7}$/.test(String(r.id))&&!ids.has(r.id)?r.id:'region-'+nextId++;ids.add(id);
+      return {id, type: ['text', 'button', 'image', 'background'].includes(r.type) ? r.type : 'text',
         x, y, w: clamp(r.w, .01, 1 - x, .3), h: clamp(r.h, .005, 1 - y, .05),
         text: String(r.text || '').slice(0, 4000), color: hex(r.color) || '#eeeeee',
         background: hex(r.background) || '', fontSize: clamp(r.fontSize, .65, 16, 1.1),
         weight: clamp(r.weight, 100, 900, 400), align: ['left', 'center', 'right'].includes(r.align) ? r.align : 'left',
-        enabled: r.enabled !== false, visual:r.visual==='crop'?'crop':'', label:String(r.label||'').slice(0,150),reviewOwner:String(r.reviewOwner||''),reviewCreated:String(r.reviewCreated||''),erase:r.erase===true, confidence: clamp(r.confidence, 0, 100, 70), letterSpacing:clamp(r.letterSpacing,0,2,0),
+        enabled: r.enabled !== false, visual:r.visual==='crop'?'crop':'', label:String(r.label||'').slice(0,150),reviewOwner:String(r.reviewOwner||''),reviewCreated:String(r.reviewCreated||''),erase:r.erase===true, confidence: clamp(r.confidence, 0, 100, 70), letterSpacing:clamp(r.letterSpacing,0,2,0),radius:clamp(r.radius,0,5,0),
         ...(r.sourceBox?{sourceBox:{x:clamp(r.sourceBox.x,0,.99),y:clamp(r.sourceBox.y,0,.995),w:clamp(r.sourceBox.w,.001,1),h:clamp(r.sourceBox.h,.001,1),color:hex(r.sourceBox.color)||'#eeeeee',mode:r.sourceBox.mode==='area'?'area':'letters'}}:{})};
     });
-    return {width: clamp(input.width, 100, 6000, 1280), height: clamp(input.height, 100, 12000, 800), background: hex(input.background) || '#10151e', regions,questions:Array.isArray(input.questions)?structuredClone(input.questions).slice(0,40):[]};
+    return {width: clamp(input.width, 100, 6000, 1280), height: clamp(input.height, 100, 12000, 800), background: hex(input.background) || '#10151e',referenceLayout:input.referenceLayout===true, regions,questions:Array.isArray(input.questions)?structuredClone(input.questions).slice(0,40):[]};
   }
   function pixels(image) {
     const {width: w, height: h, data} = image;
@@ -38,13 +40,14 @@
   function fromOCR(tsv, image) {
     const W = image.width, H = image.height, p = pixels(image), background = p.dominant(0, 0, W, H), lines = new Map();
     for (const line of String(tsv || '').split('\n').slice(1)) {
-      const a = line.split('\t'); if (a[0] !== '5' || Number(a[10]) < 40 || !a[11]?.trim()) continue;
+      const a = line.split('\t'); if (a[0] !== '5' || Number(a[10]) < 0 || !a[11]?.trim()) continue;
       const r = {x: +a[6], y: +a[7], w: +a[8], h: +a[9], text: a.slice(11).join('\t').trim(), confidence: +a[10]};
       if (![r.x, r.y, r.w, r.h].every(Number.isFinite) || r.w <= 0 || r.h < 5) continue;
       const key = a.slice(1, 5).join('-'); if (!lines.has(key)) lines.set(key, []); lines.get(key).push(r);
     }
     let regions = [];
     for (const words of lines.values()) {
+      if(!words.some(r=>r.confidence>=40))continue;
       const b = bounds(words), x = b.x, y = b.y, w = b.right - x, h = b.bottom - y;
       const bg = p.dominant(x - h * .5, y - h * .5, w + h, h * 2);
       const colors = [];
@@ -57,6 +60,7 @@
         text, color: rgb(color), background: button ? rgb(bg) : '', fontSize: Math.max(.75, h / W * 80 * (/[gjpqy]/.test(text)?1.1:1.3)), weight: h / W > .026 ? 700 : 400,
         align: Math.abs((x + w / 2) / W - .5) < .05 ? 'center' : 'left', confidence: words.reduce((n, r) => n + r.confidence, 0) / words.length});
     }
+    const unique=[];for(const r of regions.sort((a,b)=>b.w-a.w||b.confidence-a.confidence))if(!unique.some(k=>Math.abs(k.y-r.y)<.01&&Math.min(k.x+k.w,r.x+r.w)-Math.max(k.x,r.x)>Math.min(k.w,r.w)*.6))unique.push(r);regions=unique;
     regions.sort((a, b) => a.y - b.y || a.x - b.x);
     // Join wrapped paragraph lines. Separate headings, buttons and columns remain separate components.
     const merged = [];
@@ -79,7 +83,7 @@
       const avg = [0, 1, 2].map(i => colors.reduce((n, c) => n + c[i], 0) / colors.length);
       const varied=bins.size>=4&&colors.reduce((n,c)=>n+distance(c,avg),0)/colors.length>18;
       if(varied)texture[y*cols+x]=1;
-      if (varied || colors.filter(c=>distance(c,background)>40).length>=6) mask[y * cols + x] = 1;
+      if (varied || colors.filter(c=>distance(c,background)>24).length>=6) mask[y * cols + x] = 1;
     }
     // Close small holes in photographs without flooding into plain page backgrounds.
     const grown = mask.slice();
@@ -90,20 +94,29 @@
       const queue = [start]; grown[start] = 0; let left = cols, right = 0, top = rows, bottom = 0, varied=0;
       for (let q = 0; q < queue.length; q++) {const n = queue[q], x = n % cols, y = Math.floor(n / cols); varied+=texture[n];left = Math.min(left, x); right = Math.max(right, x + 1); top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {const xx = x + dx, yy = y + dy, k = yy * cols + xx; if (xx >= 0 && xx < cols && yy >= 0 && yy < rows && grown[k]) {grown[k] = 0; queue.push(k);}}}
+      // Ignore thin decorative tails attached to a picture (leaders, rays and rules).
+      const trim=(axis,start,end)=>{const counts=new Array(end-start).fill(0);for(const n of queue)counts[(axis==='x'?n%cols:Math.floor(n/cols))-start]++;const max=Math.max(...counts),keep=counts.map((n,i)=>n>=Math.max(2,max*.12)?i+start:null).filter(n=>n!==null);return keep.length?[keep[0],keep.at(-1)+1]:[start,end];};
+      [left,right]=trim('x',left,right);[top,bottom]=trim('y',top,bottom);
       const r = {type: 'image', x: left * size / W, y: top * size / H, w: Math.min(1, right * size / W) - left * size / W, h: Math.min(1, bottom * size / H) - top * size / H, text: 'Image from reference', confidence: 65};
       let denseRows=0;for(let yy=top;yy<bottom;yy++){let occupied=0;for(let xx=left;xx<right;xx++)occupied+=mask[yy*cols+xx];if(occupied/(right-left)>.35)denseRows++;}
-      if (r.w > .1 && r.h * H / W > .08 && r.w * r.h > .015 && queue.length > 15 && varied>5 && denseRows/(bottom-top)>.6 && r.w * r.h < .8) regions.push(r);
+      if (r.w > .1 && r.h * H / W > .08 && r.w * r.h > .015 && queue.length > 15 && varied>5 && denseRows/(bottom-top)>.45 && (r.w*r.h>.045||varied/queue.length>.25) && (r.w*r.h<.8||varied/queue.length>.05)) regions.push(r);
     }
-    return regions.sort((a, b) => b.w * b.h - a.w * a.h).slice(0, 16);
+    return regions.sort((a, b) => b.w * b.h - a.w * a.h).slice(0, 16).map(r=>{
+      if(r.w>.65)return r;
+      // Dark rims/shadows can match the page fill. Keep a small context margin
+      // around isolated artwork rather than cutting the silhouette at bright ink.
+      const pad=Math.max(r.w*W,r.h*H)*.08,x=Math.max(0,r.x-pad/W),y=Math.max(0,r.y-pad/H);
+      return {...r,x,y,w:Math.min(1,r.x+r.w+pad/W)-x,h:Math.min(1,r.y+r.h+pad/H)-y};
+    });
   }
   function findButtons(image,media=[]) {
-    const W=image.width,H=image.height,p=pixels(image),bg=p.dominant(0,0,W,H),step=Math.max(4,Math.round(W/180)),cols=Math.ceil(W/step),rows=Math.ceil(H/step),keys=new Array(cols*rows).fill(''),visited=new Uint8Array(cols*rows);
-    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const c=p.at((x+.5)*step,(y+.5)*step);if(distance(c,bg)>55)keys[y*cols+x]=c.map(v=>Math.round(v/32)).join(',');}
+    const W=image.width,H=image.height,p=pixels(image),bg=p.dominant(0,0,W,H),step=Math.max(2,Math.round(W/400)),cols=Math.ceil(W/step),rows=Math.ceil(H/step),keys=new Array(cols*rows).fill(''),visited=new Uint8Array(cols*rows);
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const c=p.at((x+.5)*step,(y+.5)*step);if(distance(c,bg)>14)keys[y*cols+x]=c.map(v=>Math.round(v/8)).join(',');}
     const found=[];
     for(let n=0;n<keys.length;n++){if(!keys[n]||visited[n])continue;const queue=[n],key=keys[n];visited[n]=1;let left=cols,right=0,top=rows,bottom=0;
       for(let q=0;q<queue.length;q++){const k=queue[q],x=k%cols,y=Math.floor(k/cols);left=Math.min(left,x);right=Math.max(right,x+1);top=Math.min(top,y);bottom=Math.max(bottom,y+1);for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy,i=yy*cols+xx;if(xx>=0&&xx<cols&&yy>=0&&yy<rows&&!visited[i]&&keys[i]===key){visited[i]=1;queue.push(i);}}}
       const w=(right-left)*step,h=(bottom-top)*step,r={x:left*step/W,y:top*step/H,w:w/W,h:h/H};
-      if(w/W<.055||w/W>.45||h/W<.022||h/W>.09||w/h<1.5||queue.length/((right-left)*(bottom-top))<.62||media.some(m=>r.x+r.w/2>=m.x&&r.x+r.w/2<=m.x+m.w&&r.y+r.h/2>=m.y&&r.y+r.h/2<=m.y+m.h))continue;
+      if(w/W<.055||w/W>.45||h/W<.014||h/W>.09||w/h<1.5||queue.length/((right-left)*(bottom-top))<.62||media.some(m=>r.x+r.w/2>=m.x&&r.x+r.w/2<=m.x+m.w&&r.y+r.h/2>=m.y&&r.y+r.h/2<=m.y+m.h))continue;
       r.background=rgb(p.dominant(left*step,top*step,w,h));found.push(r);
     }
     return found.sort((a,b)=>a.y-b.y).slice(0,16);
@@ -147,7 +160,7 @@
   function cleanBackdrop(image,regions) {
     const W=image.width,H=image.height,src=image.data,out=new Uint8ClampedArray(src),mask=new Uint8Array(W*H);
     for(const region of regions){if(!region.enabled&&!region.erase&&(!region.sourceBox||region.reviewOwner))continue;if(!region.sourceBox&&!['text','button'].includes(region.type))continue;const r=region.sourceBox||region;
-      const color=(r.color.match(/\w\w/g)||[]).map(c=>parseInt(c,16)),x0=Math.max(0,Math.floor(r.x*W)-3),x1=Math.min(W,Math.ceil((r.x+r.w)*W)+3),y0=Math.max(0,Math.floor(r.y*H)-3),y1=Math.min(H,Math.ceil((r.y+r.h)*H)+3);
+      const pad=r.mode==='area'?-2:3,color=(r.color.match(/\w\w/g)||[]).map(c=>parseInt(c,16)),x0=Math.max(0,Math.floor(r.x*W)-pad),x1=Math.min(W,Math.ceil((r.x+r.w)*W)+pad),y0=Math.max(0,Math.floor(r.y*H)-pad),y1=Math.min(H,Math.ceil((r.y+r.h)*H)+pad);
       for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*W+x)*4;if(r.mode==='area'||Math.hypot(src[i]-color[0],src[i+1]-color[1],src[i+2]-color[2])<95)mask[y*W+x]=1;}
     }
     const grown=mask.slice();for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++)if(mask[y*W+x])for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)grown[(y+dy)*W+x+dx]=1;
@@ -157,22 +170,51 @@
       for(const i of neighbors(n))if(pending[i]===1){pending[i]=2;queue.push(i);}}
     return out;
   }
+  // Repeated controls are one list component, not a subdivision per control.
+  // Require a clear common axis, compatible sizes, and no intervening content.
+  function groupRepeats(regions,W=1280,H=800){
+    const remaining=regions.slice(),groups=[];
+    for(const direction of ['column','row']){
+      const axis=direction==='row'?'x':'y',cross=direction==='row'?'y':'x',size=axis==='x'?'w':'h',breadth=cross==='x'?'w':'h',scale=axis==='x'?W:H;
+      const controls=remaining.filter(r=>r.type==='button').sort((a,b)=>a[axis]-b[axis]);
+      const used=new Set();
+      for(const a of controls){if(used.has(a))continue;const members=[a];
+        for(const b of controls){if(b===a||used.has(b)||b[axis]<members.at(-1)[axis]+members.at(-1)[size]-.003)continue;
+          const p=members.at(-1),crossDelta=Math.abs((a[cross]+a[breadth]/2)-(b[cross]+b[breadth]/2)),gap=b[axis]-p[axis]-p[size];
+          if(crossDelta>Math.max(.006,Math.min(a[breadth],b[breadth])*.22)||Math.max(a.h,b.h)/Math.min(a.h,b.h)>1.65||gap<-.003||gap*scale>Math.max(50,Math.min(p[size],b[size])*scale*1.5)||String(a.visual||'')!==String(b.visual||''))continue;
+          const bnd=bounds([...members,b]),blocking=remaining.some(r=>!members.includes(r)&&r!==b&&r.type!=='button'&&r.x<bnd.right&&r.x+r.w>bnd.x&&r.y<bnd.bottom&&r.y+r.h>bnd.y);if(blocking)continue;
+          if(members.length>1){const previous=members.slice(1).map((r,i)=>r[axis]-members[i][axis]-members[i][size]),mean=previous.reduce((n,v)=>n+v,0)/previous.length;if(Math.abs(gap-mean)>Math.max(.008,mean*.45))continue;}
+          members.push(b);
+        }
+        if(members.length<2)continue;members.forEach(r=>used.add(r));const b=bounds(members),gaps=members.slice(1).map((r,i)=>r[axis]-members[i][axis]-members[i][size]);groups.push({id:'list-'+a.id,type:'list',x:b.x,y:b.y,w:b.right-b.x,h:b.bottom-b.y,direction,gap:Math.max(0,gaps.reduce((n,v)=>n+v,0)/gaps.length),members});
+      }
+      for(let i=remaining.length-1;i>=0;i--)if(used.has(remaining[i]))remaining.splice(i,1);
+    }return [...remaining,...groups];
+  }
   function compile(raw, M, {name = 'Design from image', id = 'design-from-image', assets = {}} = {}) {
     const plan = normalize(raw), backdrops=plan.regions.filter(r=>r.enabled&&r.type==='background'), notes = [];
+    const reference=plan.referenceLayout||backdrops.length>0;
     for(let i=0;i<backdrops.length;i++)for(let j=0;j<i;j++)if(Math.min(backdrops[i].y+backdrops[i].h,backdrops[j].y+backdrops[j].h)-Math.max(backdrops[i].y,backdrops[j].y)>.005)throw Error('Background layers overlap. Adjust their top and height so each covers its own section.');
-    const active=plan.regions.filter(r=>r.enabled&&r.type!=='background').map(r=>{
-      if(!backdrops.length||!['text','button'].includes(r.type))return r;
+    const regions=plan.regions.filter(r=>r.enabled&&r.type!=='background').map(r=>{
+      if(!reference||r.type!=='text')return r;
       const scale=plan.height/plan.width*80,line=r.fontSize*1.1,glyph=r.h/1.5*scale;
       return {...r,y:Math.max(0,r.y-Math.max(0,line-glyph)/2/scale),h:Math.max(r.h,line/scale)};
     });
+    const active=groupRepeats(regions,plan.width,plan.height);
     if (!active.length&&!backdrops.length) throw Error('Add or enable at least one region before creating the layout.');
     const unit = 80, aspect = plan.height / plan.width;
     const regionElement = r => {
+      if(r.type==='list'){
+        const e=M.element('list');e.itemType='button';e.direction=r.direction;e.gap=r.gap*(r.direction==='column'?aspect:1)*unit;e.columnHeight=r.h*aspect*unit+.1;e.style.background=[];e.style.padding=0;e.itemStyle.background=[];e.itemStyle.padding=0;
+        if(reference)e.referenceWidth=1280;
+        e.items=r.members.map(m=>{const b=regionElement(m);return {...b,id:M.uid('item'),override:true,options:[],src:'',alt:m.label||m.text};});e.itemStyle=structuredClone(e.items[0].style);for(const item of e.items)item.override=JSON.stringify(item.style)!==JSON.stringify(e.itemStyle);for(const key of ['hoverBackground','clickBackground','hoverColor','clickColor'])e[key]=e.items[0][key];return e;
+      }
       const e = M.element(r.type); e.style = {...e.style, color: r.color, fontSize: r.fontSize, fontWeight: r.weight, textAlign: r.align, lineHeight: 1.25, borderRadius: 0,letterSpacing:r.letterSpacing};
-      if(backdrops.length){e.style.fontFamily='Arial, sans-serif';e.style.referenceWidth=1280;e.style.referenceFit=true;e.referenceWidth=1280;}
+      if(reference){e.style.fontFamily='Arial, sans-serif';e.style.referenceWidth=1280;e.style.referenceFit=true;e.referenceWidth=1280;}
       if (r.type === 'image') {e.src = assets[r.id] || ''; e.alt = r.text || 'Image from reference'; e.height = Math.max(.5, r.h * aspect * unit); e.lightbox = false;e.fit='contain';}
       else {e.text = r.text; if (r.type === 'text') e.tag = r.fontSize >= 2.3 ? 'h2' : 'p';
         else {e.icon = ''; e.style.background = r.background ? [r.background] : []; e.style.borderWidth = 0; e.style.borderRadius = .4; e.style.padding = .6; e.hoverBackground = r.background || 'transparent'; e.clickBackground = r.background || 'transparent'; e.hoverColor = r.color; e.clickColor = r.color;if(r.reviewCreated){e.style.padding=0;e.style.borderRadius=0;}if(r.visual==='crop'){e.imageIcon=assets[r.id]||'';e.label=r.label||'Image button';e.sizeMode='custom';e.width=r.w*unit;e.height=r.h*aspect*unit;e.style.padding=0;e.style.background=[];e.style.borderRadius=0;e.hoverBackground='transparent';e.clickBackground='transparent';}}}
+      if(r.type==='button'&&reference){e.sizeMode='custom';e.width=r.w*unit;e.height=r.h*aspect*unit;e.style.padding=0;e.style.borderRadius=r.radius||0;}
       return e;
     };
     function tree(rs, box, depth = 0) {
@@ -182,7 +224,7 @@
         c.padding = Math.min(3, margin * unit); const cx = (r.x + r.w / 2 - box.x) / (box.right - box.x), cy = (r.y + r.h / 2 - box.y) / (box.bottom - box.y);
         c.align = (cx < .38 ? 'left' : cx > .62 ? 'right' : 'center') + (cy < .38 ? ' top' : cy > .62 ? ' bottom' : '');
         c.element = regionElement(r);
-        if(backdrops.length){
+        if(reference){
           c.padding=0;c.align='left top';c.referenceInset={enabled:true,left:Math.max(0,(r.x-box.x)/(box.right-box.x)*100),right:Math.max(0,(box.right-r.x-r.w)/(box.right-box.x)*100),top:Math.max(0,(r.y-box.y)/(box.bottom-box.y)*100),bottom:0};c.element.style.lineHeight=1.1;
         }return c;
       }
@@ -228,11 +270,11 @@
     if (group.length) bands.push(group);
     const sectionRanges=backdrops.length?Array.from(new Set([0,1,...backdrops.flatMap(b=>[b.y,b.y+b.h])])).sort((a,b)=>a-b).slice(0,-1).map((top,i,starts)=>({top,end:starts[i+1]??1})).filter(b=>b.end-b.top>.002):bands.map((rs,i)=>({top:i===0?0:(bounds(bands[i-1]).bottom+bounds(rs).y)/2,end:i===bands.length-1?1:(bounds(rs).bottom+bounds(bands[i+1]).y)/2,rs}));
     const sections = sectionRanges.map(({top,end,rs:provided}, i) => {const rs=provided||active.filter(r=>r.y+r.h*.33>=top&&r.y+r.h*.33<end);
-      const s = M.section(sectionRanges.length === 1 ? name : name + ' · ' + (i + 1), 'flexible'); s.id = sectionRanges.length === 1 ? id : id + '-' + (i + 1); s.height = Math.max(2, (end - top) * aspect * unit); s.surface.background = [plan.background]; s.surface.overlay.enabled = false; s.gap = 0;if(backdrops.length){s.referenceAspect=(end-top)*aspect;s.preserveProportions=true;}
+      const s = M.section(sectionRanges.length === 1 ? name : name + ' · ' + (i + 1), 'flexible'); s.id = sectionRanges.length === 1 ? id : id + '-' + (i + 1); s.height = Math.max(2, (end - top) * aspect * unit); s.surface.background = [plan.background]; s.surface.overlay.enabled = false; s.gap = 0;if(reference){s.referenceAspect=(end-top)*aspect;s.preserveProportions=true;}
       const backdrop=backdrops.find(b=>top>=b.y-.001&&end<=b.y+b.h+.001);if(backdrop){s.surface.image=assets[backdrop.id]||'';s.surface.imageFit='cover';}
       if(!rs.length)return s;
       const extent=bounds(active),left=extent.x>.015?extent.x:0,right=1-extent.right>.015?1-extent.right:0;
-      if(!backdrops.length&&(left||right)){try{const inner=tree(rs,{x:left,y:top,right:1-right,bottom:end},1),outer=M.cell();outer.gap=0;outer.direction='columns';outer.children=[];outer.ratios=[];
+      if(!reference&&(left||right)){try{const inner=tree(rs,{x:left,y:top,right:1-right,bottom:end},1),outer=M.cell();outer.gap=0;outer.direction='columns';outer.children=[];outer.ratios=[];
         if(left){const margin=M.cell();margin.gap=0;outer.children.push(margin);outer.ratios.push(left*100);}outer.children.push(inner);outer.ratios.push((1-left-right)*100);
         if(right){const margin=M.cell();margin.gap=0;outer.children.push(margin);outer.ratios.push(right*100);}s.grid=outer;
       }catch{s.grid=tree(rs,{x:0,y:top,right:1,bottom:end});notes.push('Outer spacing was simplified to keep this section within the supported grid depth.');}}
@@ -247,7 +289,7 @@
         const e = c.element;if(e)delete e.referenceWidth; if (!e) {c.enabled=false;return .01;}
         if (e.type === 'image') {e.height = Math.min(device === 'mobile' ? 18 : 26, e.height); return e.height + .5;}
         delete e.style.referenceWidth;delete e.style.referenceFit;e.style.fontSize = Math.max(.85, Math.min(device === 'mobile' ? 2.5 : 3.5, e.style.fontSize));
-        if (e.type === 'list') {e.items.forEach(t => {delete t.style.referenceWidth;t.style.fontSize = Math.min(2.5, t.style.fontSize);}); return e.items.reduce((n, t) => n + Math.ceil(t.text.length / 32) * t.style.fontSize * 1.4 + .5, 0);}
+        if (e.type === 'list') {delete e.itemStyle.referenceWidth;delete e.itemStyle.referenceFit;e.itemStyle.fontSize=Math.max(.85,Math.min(2.5,e.itemStyle.fontSize));e.items.forEach(t => {delete t.referenceWidth;delete t.style.referenceWidth;delete t.style.referenceFit;t.style.fontSize = Math.max(.85,Math.min(2.5, t.style.fontSize));if(e.itemType==='button'){t.height=Math.max(2.75,t.height);t.width=Math.min(width-2,t.width);}});e.columnHeight=200;return e.direction==='column'?e.items.reduce((n,t)=>n+(t.height||2.75)+e.gap,0):Math.ceil(e.items.reduce((n,t)=>n+(t.width||6)+e.gap,0)/(width-2))*Math.max(...e.items.map(t=>t.height||2.75))+1;}
         return Math.max(e.type === 'button' ? 3.5 : 2, (String(e.text).split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length * e.style.fontSize * .57 / width)), 0)) * e.style.fontSize * 1.4 + 1) + c.padding * 2;
       }
       copy.height = Math.max(copy.surface.image?16:0,adjust(copy.grid) + 2); copy.padding = 1;if(backdrops.length)copy.surface.imageFit='cover'; return copy;
@@ -255,11 +297,12 @@
     const mobile=sections.map(s=>responsive(s,'mobile')),tablet=sections.map(s=>responsive(s,'tablet'));
     const navigation=plan.questions.find(q=>q.kind==='navigation'&&q.answer==='navigation');
     if(navigation){for(const variants of [sections,mobile,tablet]){const header=variants[0];if(header&&navigation.band&&sectionRanges[0].end<=navigation.band.h+.02){header.type='appbar';header.name=name+' · Navigation';header.sticky=false;header.surface.image='';header.surface.background=[navigation.band.color||plan.background];const block=M.subsection('');block.grid=header.grid;block.height=header.height;block.heightMode='auto';block.surface.enabled=false;header.blocks=[block];header.grid=M.cell();}}}
-    if (active.some(r => r.type === 'button')) notes.push('Button destinations cannot be read from a screenshot. Set their actions in the inspector.');
+    if (regions.some(r => r.type === 'button')) notes.push('Button destinations cannot be read from a screenshot. Set their actions in the inspector.');
+    if(active.some(r=>r.type==='list'))notes.push('Repeated buttons are grouped into editable lists. Change shared styling, spacing and individual actions in the inspector.');
     if(backdrops.length)notes.push('Artwork behind text is reconstructed approximately. Replace the background with the original artwork for a clean result. Review detected controls and add any missed regions before importing.');
     notes.push('Fonts, spacing and mobile stacking are approximations. Every generated component remains editable.');
     return {sections,mobile,tablet,notes};
   }
-  const api = {normalize, fromOCR, findMedia, findButtons, findBackdrop, letteringMask, inkGroups, cleanBackdrop, compile, pixels, clamp};
+  const api = {normalize, fromOCR, findMedia, findButtons, findBackdrop, letteringMask, inkGroups, cleanBackdrop,groupRepeats, compile, pixels, clamp};
   G.CraftDesign = api; if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);
