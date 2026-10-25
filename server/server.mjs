@@ -1,5 +1,6 @@
 import {createServer} from 'node:http';
 import {createSharing} from './sharing.mjs';
+import {createHelpAI} from './help-ai.mjs';
 import {randomBytes,createHash,timingSafeEqual} from 'node:crypto';
 import {readFile,stat} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
@@ -15,9 +16,10 @@ const repoName=n=>typeof n==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(
 const projectId=n=>typeof n==='string'&&/^[a-zA-Z0-9_-]{16,80}$/.test(n);
 export function validPath(p){return typeof p==='string'&&p.length<400&&!p.includes('\\')&&!p.split('/').some(x=>!x||x==='.'||x==='..'||/[\x00-\x1f]/.test(x))&&(p==='.nojekyll'||['index.html','README.md','craftcareer.json','ICONS-LICENSES.md'].includes(p)||/^(config|css|js)\/[^?<>:#]+$/.test(p)||/^assets\/[^?<>:#]+$/.test(p));}
 const encode=p=>p.split('/').map(encodeURIComponent).join('/');
-export function createApp({origin,clientId='',clientSecret='',siteDir=resolve(fileURLToPath(new URL('../site',import.meta.url))),fetchImpl=fetch,now=()=>Date.now(),writeDelayMs=900}={}){
+export function createApp({origin,clientId='',clientSecret='',siteDir=resolve(fileURLToPath(new URL('../site',import.meta.url))),fetchImpl=fetch,now=()=>Date.now(),writeDelayMs=900,helpAI={}}={}){
  const o=new URL(origin||'http://localhost:8787');if(!['http:','https:'].includes(o.protocol)||o.username||o.password||o.pathname!=='/'||o.search||o.hash||(!['localhost','127.0.0.1','[::1]'].includes(o.hostname)&&o.protocol!=='https:'))throw Error('PUBLIC_ORIGIN must be an HTTPS origin (HTTP is allowed only for localhost).');origin=o.origin;
  const sharing=createSharing({origin,now});
+ const help=createHelpAI({...helpAI,origin,now});
  const sessions=new Map(),states=new Map(),jobs=new Map(),downloads=new Map(),locks=new Set();const configured=!!(clientId&&clientSecret),secure=o.protocol==='https:';
  const cookie=(name,value,age)=>`${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure?'; Secure':''}`;
  const cookies=req=>Object.fromEntries((req.headers.cookie||'').split(';').map(x=>x.trim().split('=')));
@@ -38,6 +40,7 @@ export function createApp({origin,clientId='',clientSecret='',siteDir=resolve(fi
  const handler=async(req,res)=>{try{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','SAMEORIGIN');cleanup();
   const u=new URL(req.url,origin),p=u.pathname;
+  if(await help.handle(req,res,u))return;
   if(await sharing.handle(req,res,u))return;
   if(p==='/api/github/session'&&req.method==='GET'){let s;try{s=session(req);}catch{}return send(res,200,{configured,connected:!!s,user:s?{login:s.user.login}:null,csrf:s?.csrf||null,limits:{fileBytes:MAX_FILE,totalBytes:MAX_TOTAL,maxFiles:2000}});}
   if(p==='/api/github/connect'&&req.method==='GET'){
@@ -109,8 +112,8 @@ export function createApp({origin,clientId='',clientSecret='',siteDir=resolve(fi
   if(req.method!=='GET'&&req.method!=='HEAD')throw fail('Method not allowed.',405);
   let rel;try{rel=decodeURIComponent(p);}catch{throw fail('Invalid path.');}if(rel.split('/').some(n=>n.startsWith('.')||n.includes('\\')))throw fail('Not found.',404);const file=resolve(siteDir,'.'+(rel==='/'?'/index.html':rel));if(!file.startsWith(resolve(siteDir)+sep))throw fail('Not found.',404);let info;try{info=await stat(file);}catch{throw fail('Not found.',404);}if(!info.isFile())throw fail('Not found.',404);const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.avif':'image/avif','.ico':'image/x-icon','.pdf':'application/pdf','.mp4':'video/mp4','.woff2':'font/woff2','.md':'text/markdown; charset=utf-8'};const bytes=await readFile(file);let start=0,end=bytes.length-1,status=200;const range=req.headers.range?.match(/^bytes=(\d+)-(\d*)$/);if(range){start=Number(range[1]);end=range[2]?Math.min(Number(range[2]),end):end;if(start>end){res.writeHead(416,{'Content-Range':`bytes */${bytes.length}`});return res.end();}status=206;res.setHeader('Content-Range',`bytes ${start}-${end}/${bytes.length}`);}res.writeHead(status,{'Content-Type':types[extname(file)]||'application/octet-stream','Content-Length':Math.max(0,end-start+1),'Accept-Ranges':'bytes','Cache-Control':rel.startsWith('/vendor/ocr-6.0.1/')?'public, max-age=31536000, immutable':'no-cache'});res.end(req.method==='HEAD'?undefined:bytes.subarray(start,end+1));
  }catch(e){if(!res.headersSent)send(res,e.status||500,{error:e.status?e.message:'The publishing service could not complete the request. Retry shortly.'});else res.end();}};
- return {handler,close:()=>{for(const timer of buildTimers)clearTimeout(timer);buildTimers.clear();sharing.close();sessions.clear();states.clear();jobs.clear();downloads.clear();writeQueues.clear();}};
+ return {handler,close:()=>{for(const timer of buildTimers)clearTimeout(timer);buildTimers.clear();help.close();sharing.close();sessions.clear();states.clear();jobs.clear();downloads.clear();writeQueues.clear();}};
 }
 export function start(options={}){const app=createApp(options),server=createServer(app.handler);server.on('close',app.close);return server;}
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const port=Number(process.env.PORT||8787);const server=start({origin:process.env.PUBLIC_ORIGIN||`http://localhost:${port}`,clientId:process.env.GITHUB_CLIENT_ID,clientSecret:process.env.GITHUB_CLIENT_SECRET});server.listen(port,process.env.HOST||'127.0.0.1',()=>console.log('CraftCareer is ready on port '+port+'. GitHub: '+(process.env.GITHUB_CLIENT_ID&&process.env.GITHUB_CLIENT_SECRET?'configured':'setup required')));}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const port=Number(process.env.PORT||8787);const server=start({origin:process.env.PUBLIC_ORIGIN||`http://localhost:${port}`,clientId:process.env.GITHUB_CLIENT_ID,clientSecret:process.env.GITHUB_CLIENT_SECRET,helpAI:{accountId:process.env.CLOUDFLARE_ACCOUNT_ID,apiToken:process.env.CLOUDFLARE_API_TOKEN,model:process.env.CLOUDFLARE_AI_MODEL,maxDailyRequests:Math.max(1,Math.min(1000,Number(process.env.CLOUDFLARE_AI_DAILY_REQUESTS)||300))}});server.listen(port,process.env.HOST||'127.0.0.1',()=>console.log('CraftCareer is ready on port '+port+'. GitHub: '+(process.env.GITHUB_CLIENT_ID&&process.env.GITHUB_CLIENT_SECRET?'configured':'setup required')));}
 

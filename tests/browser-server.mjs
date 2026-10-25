@@ -10,6 +10,7 @@ const app=createApp({origin,clientId:'test-client',clientSecret:'test-secret',fe
 const root=fileURLToPath(new URL('.',import.meta.url));
 createServer(async(req,res)=>{try{
  const path=new URL(req.url,origin).pathname;
+ if(path==='/'&&new URL(req.url,origin).searchParams.get('test')?.startsWith('help-')){res.setHeader('Content-Type','text/html');const html=await readFile(fileURLToPath(new URL('../site/index.html',import.meta.url)),'utf8');res.end(html.replace('<script src="help-remote.js','<script>window.CRAFTCAREER_CONFIG.helpChat.cloudflare=false;</script><script src="help-remote.js'));return;}
  if(path==='/__test__/technical-reference.png'){res.setHeader('Content-Type','image/png');res.end(await readFile(root+'fixtures/technical-reference.png'));return;}
  if(['/help.html','/help.js','/technical.html','/technical.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.slice(1)));return;}
  if(path==='/__test__/guided-reference.png'){res.setHeader('Content-Type','image/png');res.end(await readFile(root+'fixtures/guided-reference.png'));return;}

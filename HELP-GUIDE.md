@@ -1,47 +1,32 @@
-# CraftCareer Help — 1.6.1
+# CraftCareer Help — 1.7.0
 
-## For users
+Use **Help** to ask about CraftCareer. When the server is connected to Cloudflare, it generates an answer grounded in the reviewed CraftCareer guides. **Browse topics** and suggested guide buttons open the built-in guides locally. AI can make mistakes and cannot change your canvas or inspect your GitHub account.
 
-Choose **? Help** in the top bar. Ask a question, choose a suggested guide, or open **Browse topics**. The guide covers 53 reviewed CraftCareer workflows, including layouts, splits, components, lists, assets, responsive overrides, publishing and collaboration.
+For setup, read **CLOUDFLARE-SETUP.md**. Required credentials belong in Render's environment, never frontend files.
 
-This is a **built-in guide**, not a generative AI model. It matches words, supported phrases and selection context to reviewed instructions. It cannot understand every wording, inspect a GitHub account, guarantee a diagnosis or create a layout. Ambiguous matches offer topic choices; unmatched questions say so. Use the topic list if a question is not understood.
+## Privacy and selection context
 
-**Use selected component** shares only the type of selection, section type, editing mode, device and view-only state with the local guide. It does not read your project text, uploaded files, account credentials or asset contents. Questions and responses remain in page memory, are never sent to a server, and disappear on reload. New chat clears them. Opening another workspace also clears the conversation.
+AI questions and at most six recent messages go through the CraftCareer backend to Cloudflare. With Use selected component enabled, only the component/section/device type and read-only state are included. Portfolio document contents, uploaded assets and account credentials are not read. Chat history is held in page memory, cleared on reload, New chat or workspace changes. The server does not save transcripts.
 
-The guide's **Show…** buttons open or highlight the relevant existing control. They do not submit a publish action, delete a section or change component values. Close the help panel to continue working; the canvas is not resized when help opens. Enter sends; Shift+Enter adds a line; Escape closes. Chat input does not trigger canvas shortcuts.
+## Chat behaviour
 
-## Why there is no hosted AI connection
+Answers type quickly with colored, heavier important words. Read more moves to the rest of a long answer; typing does not continually force scrolling to the end. Reduced-motion preferences show answers immediately. While a request is running, Send is disabled. Closing chat, choosing a guide, New chat or changing workspaces cancels a pending request and prevents late replies from appearing in the wrong conversation. Closing during the typing animation reveals the rest of the existing answer.
 
-The owner requested free help without depending on a limited AI service. The official services checked on 26 October 2026 provide quotas, not an unlimited free service for every visitor:
+If AI is temporarily unavailable, the chat shows a brief message and local-guide choices. For a daily pause it shows the next UTC reset in the visitor's local date/time without mentioning usage allowances. Other failures show a short retry message.
 
-- [Gemini API](https://ai.google.dev/gemini-api/docs/rate-limits): model/project usage limits apply to the free tier.
-- [Groq](https://console.groq.com/docs/rate-limits): free plans have request and token limits.
-- [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/platform/pricing/): free allocation is 10,000 neurons per day; requests fail after applicable limits are exceeded.
+## Creator configuration
 
-No account, external AI integration, API key or paid fallback was added. Once the creator's files have loaded, this guide does not need a network request to answer. This does not guarantee uptime of the website's hosting service.
+In site/creator-config.js, helpChat contains:
 
-## Animated answers
+- enabled: show/hide Help.
+- title: heading.
+- useSelection: default selection context checkbox.
+- maxMessages: bounded visible conversation, 8–60, default 24.
+- typingEffect: enable/disable typing animation.
+- typingSpeed: 30–500 characters/second, default 180, long answers finish within six seconds.
+- cloudflare: true for server AI, false for local-only guide matching.
+- apiBase: same-origin API path, default /api/help.
 
-Answers appear progressively at a fast typing pace (normally 180 characters per second, at most six seconds for a long answer). Key controls and terms are bold with an accent underline. The beginning of the answer stays visible; typing does not continually scroll to the bottom. Use **Read more** or scroll yourself to read further. Sending another question completes the previous answer; New chat cancels it. Closing help completes typing without changing the answer. Reduced-motion preferences show the answer immediately.
+The 53 reviewed topics remain in help-knowledge.js. Update them when features change. help-engine.js retrieves relevant guides. help-remote.js handles the local backend connection. server/help-ai.mjs handles Cloudflare and request validation. help-presentation.js handles safe text emphasis and typing. No HTML from users or AI is interpreted.
 
-## Configuration and maintenance
-
-In `site/creator-config.js`:
-
-- `helpChat.enabled`: show or hide the guide.
-- `helpChat.title`: chat heading.
-- `helpChat.useSelection`: default selection-context setting.
-- `helpChat.typingEffect`: enable/disable animation.
-- `helpChat.typingSpeed`: characters per second, clamped to 30–500 (default 180).
-- `helpChat.maxMessages`: bounded visible history (8–60 messages).
-- `designAssistant.showLauncher`: defaults to false. Set true to restore From image. `designAssistant.enabled` remains true so its existing API and tools remain available for development.
-
-The image assistant's scripts, model resources, review UI, examples and tests are retained. The guide does not load OCR resources when used.
-
-`site/help-knowledge.js` contains the reviewed articles and their related topics. Update these when control names or behaviour change. `help-engine.js` performs local retrieval; `help-chat.js` is the interface. The content is currently English. User text is rendered as text, never executed as HTML.
-
-Help is creator-only: exported portfolios contain their usual section configurations, assets and runtime. They do not acquire chat files or conversation history. Publishing, OAuth, sharing and the portfolio format are unchanged.
-
-## Verification
-
-Run `npm test` for service, configuration, image-engine and help retrieval checks. `node tests/browser-server.mjs` then `/help.html` runs the optional browser harness against the local mock server. Never deploy the test server. See TEST-REPORT.md for which checks were actually run in this release.
+Exports retain the existing config-file format and contain neither the creator help scripts nor chat history. Image analysis is preserved and hidden by default. GitHub publishing and sharing do not require AI.

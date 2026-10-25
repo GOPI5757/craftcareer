@@ -11,7 +11,7 @@
 @media(prefers-reduced-motion:reduce){#help-chat *{scroll-behavior:auto!important}}
 
 /* Progressive answers retain their starting position; readers choose when to move down. */
-#help-chat .help-keyword{font-weight:750;color:var(--text);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px}
+#help-chat .help-keyword{font-weight:800;color:var(--accent);text-decoration:none}
 #help-chat .help-typing{display:block;color:var(--muted);font-size:.75rem;margin-bottom:.4rem}
 #help-chat .help-typing-line::after{content:"";display:inline-block;width:2px;height:.85em;background:var(--accent);margin-left:3px;vertical-align:baseline}
 #help-chat .help-read-more{align-self:center;flex:none;font-size:.8rem;margin:.2rem .5rem;padding:.3rem .8rem;border-color:var(--accent)}

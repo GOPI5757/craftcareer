@@ -31,3 +31,6 @@ test('Presentation loaded before chat with safe text nodes and lifecycle cleanup
  assert.ok(ui.includes("messages.setAttribute('aria-busy','true')"));
  assert.ok(ui.includes("window.matchMedia('(prefers-reduced-motion: reduce)')"));
 });
+
+test('AI emphasis becomes safe highlighted text without executing HTML',()=>{const result=P.segments('Choose **Split** and **<img src=x>**.');assert.equal(result.map(x=>x.text).join(''),'Choose Split and <img src=x>.');assert.ok(result.find(x=>x.text==='<img src=x>'&&x.important));});
+test('Keyword styling uses colored heavier text without an underline',()=>{const css=readFileSync(new URL('../site/help-chat.css',import.meta.url),'utf8');assert.match(css,/help-keyword\{font-weight:800;color:var\(--accent\);text-decoration:none/);});

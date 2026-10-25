@@ -4,8 +4,8 @@ window.CRAFTCAREER_CONFIG = {
   defaultTheme: 'dark',
   // Local OCR and layout rules are bundled. Browser-native vision AI is optional.
   designAssistant: { enabled: true, showLauncher: false, maxFileMB: 20 },
-  // Free reviewed guidance. No external AI service, API key, or usage charges.
-  helpChat: { enabled: true, title: "CraftCareer Help", useSelection: true, maxMessages: 24, typingEffect: true, typingSpeed: 180 },
+  // AI credentials stay on the server. Built-in guides remain available.
+  helpChat: { enabled: true, title: "CraftCareer Help", useSelection: true, maxMessages: 24, typingEffect: true, typingSpeed: 180, cloudflare: true, apiBase: '/api/help' },
   publishing: { enabled: true, apiBase: '/api/github', pollSeconds: 8 },
   // Creator help only; not included in portfolios exported by your users.
   tutorial: {

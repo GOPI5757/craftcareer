@@ -842,7 +842,7 @@ const topics=[
     "tags": "from image image ai design assistant screenshot generate analyse analysis hidden removed",
     "intro": "From image is hidden in this release. Its analysis code and bundled resources are retained.",
     "steps": [
-      "This help chat is a local, built-in guide. It does not train a model, generate a design, or make changes to your canvas.",
+      "Help supports Cloudflare AI answers when connected by the site owner, plus local built-in guides. Neither mode generates a design or makes changes to your canvas.",
       "The creator owner can restore the image entry by setting designAssistant.showLauncher to true in creator-config.js.",
       "For now, build a layout with sections, splits and components; the guide can explain these workflows."
     ],

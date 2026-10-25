@@ -1,3 +1,13 @@
+# CraftCareer 1.7.0 — Cloudflare AI help
+
+Cloudflare AI chat is implemented with CraftCareer guide context, recent conversation, temporary-unavailability handling and local guide access. Highlighted words now use colored, heavier text without underlines. The existing typing effect remains.
+
+**Required:** add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in Render Environment and redeploy. Read CLOUDFLARE-SETUP.md for exact steps. Do not put credentials in site/creator-config.js. GitHub environment settings remain unchanged. Real AI replies require valid credentials; they are not included.
+
+Run npm test for automated checks. This release was tested using mocked provider responses, not a live Cloudflare account. See TEST-REPORT.md for limitations.
+
+## Previous release notes (historical)
+
 # CraftCareer 1.6.1 — chat presentation update
 
 Help replies now type progressively and highlight important controls and terms. Long replies retain their starting position with a Read more button. No server/environment changes are needed. Image analysis remains preserved and hidden.
