@@ -274,7 +274,7 @@
     dialog.addEventListener('keydown', e => e.stopPropagation());
     document.body.append(dialog); new ResizeObserver(sizePreview).observe(refs.stage);
   }
-  const launch = button('✦ From image', open, 'design-launch'); launch.id = 'design-launch'; launch.title = 'Create an editable layout from a design image'; document.getElementById('open-assets').after(launch);
+  if(config.showLauncher !== false){ const launch = button('✦ From image', open, 'design-launch'); launch.id = 'design-launch'; launch.title = 'Create an editable layout from a design image'; document.getElementById('open-assets').after(launch); }
   // Public, deterministic analysis helpers also support the shipped regression harness.
   window.CraftDesignAssistant = {open, decode, analyse, crops, sample, nativePlan, nativeAvailability,buildExample};
 })();

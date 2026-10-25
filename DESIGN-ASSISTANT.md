@@ -1,3 +1,5 @@
+> In 1.6.0, From image is hidden by default. The following documents the retained feature. Set `designAssistant.showLauncher` to true in `site/creator-config.js` to restore its entry point.
+
 # CraftCareer — image-to-layout assistant
 
 **From image** beside Assets creates a starting layout using CraftCareer's normal sections, splits and components. Version 1.5 adds guided classification for uncertain controls and preserves image proportions. Recognized headings and labels become editable components above a background layer; it does not present one flattened screenshot as an editable website or generate executable HTML from an AI response.

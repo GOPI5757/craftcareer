@@ -1,0 +1,27 @@
+/* Optional real-browser checks; run only through the local mock server. */
+(async()=>{
+let passed=0,failed=0;const status=document.querySelector('#status'),results=document.querySelector('#results'),frame=document.querySelector('#workspace');
+const wait=ms=>new Promise(r=>setTimeout(r,ms)),assert=(v,m='Assertion failed')=>{if(!v)throw Error(m);};
+const test=async(name,fn)=>{try{await fn();passed++;const n=document.createElement('li');n.className='pass';n.textContent='PASS '+name;results.append(n);}catch(e){failed++;const n=document.createElement('li');n.className='fail';n.textContent='FAIL '+name+': '+e.message;results.append(n);}status.textContent=passed+' passed · '+failed+' failed';};
+frame.src='/?test=help-'+Date.now();await new Promise(r=>frame.onload=r);const w=frame.contentWindow,d=frame.contentDocument;await w.CraftCareer.ready;d.querySelector('#modal').close();
+const q=s=>d.querySelector(s),all=s=>[...d.querySelectorAll(s)],click=text=>{const b=all('#help-chat button').find(n=>n.textContent===text);assert(b,'Missing '+text);b.click();};
+const ask=text=>{q('#help-chat-input').value=text;q('#help-chat form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));};
+const doc=JSON.stringify(w.CraftCareer.getDocument()),before=q('#preview-viewport').getBoundingClientRect();
+await test('Image launcher hidden; preserved analysis API still present',()=>{assert(!q('#design-launch'));assert(typeof w.CraftDesignAssistant.analyse==='function');});
+await test('Help opens without changing the canvas size',()=>{q('#help-chat-launch').click();assert(!q('#help-chat').hidden);const after=q('#preview-viewport').getBoundingClientRect();assert(before.width===after.width&&before.height===after.height);assert(d.activeElement===q('#help-chat-input'));});
+await test('Free local guide is labelled honestly',()=>assert(q('#help-chat').textContent.includes('not generative AI')));
+await test('Split question produces steps and a guide source',()=>{ask('How do I split into three columns?');assert(q('#help-chat-messages').lastElementChild.textContent.includes('percentages automatically total 100'));assert(q('#help-chat-messages').lastElementChild.textContent.includes('Source:'));});
+await test('Unknown request offers choices rather than an invented answer',()=>{ask('What is the weather tomorrow?');assert(q('#help-chat-messages').lastElementChild.textContent.includes('could not confidently match'));});
+await test('Question text is rendered safely',()=>{ask('<img src=x onerror=alert(1)>');assert(!q('#help-chat-messages img'));});
+await test('Follow-up on mobile uses responsive guidance',()=>{ask('And on mobile?');assert(q('#help-chat-messages').lastElementChild.textContent.includes('Tablet and mobile inherit'));});
+await test('Browse topics can find and open a guide',()=>{click('Browse topics');q('[aria-label="Find a help topic"]').value='gallery';q('[aria-label="Find a help topic"]').dispatchEvent(new w.Event('input'));const b=q('.help-topic-list button');assert(b);b.click();assert(q('#help-topic-directory').hidden);});
+await test('New chat removes previous questions',()=>{click('New chat');assert(!q('#help-chat-messages').textContent.includes('weather tomorrow'));});
+await test('History remains bounded',()=>{for(let i=0;i<30;i++)ask('How do I resize a button?');assert(q('#help-chat-messages').children.length<=24);});
+await test('Typing shortcuts in chat do not reach editor shortcut handlers',()=>{let reached=false;const listen=e=>{if(e.key==='z')reached=true;};d.addEventListener('keydown',listen);q('#help-chat-input').dispatchEvent(new w.KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));d.removeEventListener('keydown',listen);assert(!reached);});
+await test('Escape closes and returns focus',()=>{q('#help-chat-input').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert(q('#help-chat').hidden);assert(q('#help-chat-launch').getAttribute('aria-expanded')==='false');q('#help-chat-launch').click();});
+for(const [width,height]of [[320,640],[600,360],[1024,768],[1366,768],[1920,1080]])await test('Panel, input and send stay within '+width+'×'+height,async()=>{frame.style.width=width+'px';frame.style.height=height+'px';await wait(150);const panel=q('#help-chat').getBoundingClientRect(),send=q('#help-chat button[type=submit]').getBoundingClientRect();assert(panel.left>=0&&panel.right<=w.innerWidth+1&&panel.top>=0&&panel.bottom<=w.innerHeight+1);assert(send.bottom<=panel.bottom&&send.top>=panel.top);assert(q('#help-chat').scrollWidth<=q('#help-chat').clientWidth+1);});
+await test('Light theme and chat scroll remain usable',()=>{d.body.dataset.theme='light';const log=q('#help-chat-messages');log.scrollTop=log.scrollHeight;assert(log.scrollHeight-log.scrollTop-log.clientHeight<=2);});
+await test('Chat does not alter the portfolio document',()=>assert(JSON.stringify(w.CraftCareer.getDocument())===doc));
+await test('Export omits creator help and retained AI tools',async()=>{const zip=await w.CraftCareer.buildZip();assert(!Object.keys(zip.files).some(n=>/help-chat|help-engine|help-knowledge|design-assistant|traineddata/.test(n)));});
+status.textContent=passed+' passed · '+failed+' failed · complete';
+})().catch(e=>document.querySelector('#status').textContent='Fatal: '+e.message);

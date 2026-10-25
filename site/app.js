@@ -394,7 +394,7 @@ async function applyDesign(raw,media=new Map(),name='Design from image'){
  notify('Added '+result.sections.length+' editable section'+(result.sections.length===1?'':'s')+'. Undo reverses the import.');return {sectionIds:result.sections.map(s=>s.id),assetCount:staged.size};
 }
 // Local document API for export, publishing metadata and regression checks. No credentials are stored here.
-window.CraftCareer=window.PortfolioForge={ready:startup,saveLocalDraft:()=>saveDraft(),captureWorkspace,applySharedWorkspace,setSharedAccess,setCollaboratorCursors,applyDesign,canEdit:()=>!sharedReadOnly,flushPending:flushInputs,getDocument:()=>M.clone(baseData),getResolvedDocument:()=>M.clone(data),buildZip,importWebsite,preflight,validate:validateDocument,setPublishing:value=>{flushInputs();synchronize();baseData.site.publishing=M.clone(value);data.site.publishing=M.clone(value);queueSave();}};
+window.CraftCareer=window.PortfolioForge={ready:startup,saveLocalDraft:()=>saveDraft(),captureWorkspace,applySharedWorkspace,setSharedAccess,setCollaboratorCursors,applyDesign,canEdit:()=>!sharedReadOnly,flushPending:flushInputs,getHelpContext:()=>({component:component()?.type||'',section:section()?.type||'',device:scope,mode,readOnly:sharedReadOnly,hasSelection:!!selection.section}),getDocument:()=>M.clone(baseData),getResolvedDocument:()=>M.clone(data),buildZip,importWebsite,preflight,validate:validateDocument,setPublishing:value=>{flushInputs();synchronize();baseData.site.publishing=M.clone(value);data.site.publishing=M.clone(value);queueSave();}};
 })();
 
 

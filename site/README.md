@@ -1,3 +1,7 @@
+# CraftCareer 1.6.0 help update
+
+Choose **? Help** for the free, local built-in guide. From image is hidden; its code is retained. See ../HELP-GUIDE.md for behaviour and configuration, and ../TEST-REPORT.md for this release's verification limits.
+
 # CraftCareer
 
 **A portfolio creator for game makers — By Gopinath.**

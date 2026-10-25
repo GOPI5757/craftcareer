@@ -1,57 +1,32 @@
-## 1.5.1 — recognition and editable lists
+# CraftCareer 1.6.0 — Built-in Help
 
-Improves dark artwork detection, complete-line OCR review, proportional layout and repeated-button lists. Read [TRAINING-STATUS.md](TRAINING-STATUS.md) for exactly what was changed and what was not trained. Reviewed examples can be saved locally from the design assistant.
+A portfolio creator for game makers — By Gopinath.
 
-# CraftCareer · By Gopinath
+This update hides **From image** while retaining its code and bundled resources. The new **? Help** button opens a free, local chat-style guide with 53 reviewed topics, contextual help, follow-up choices and shortcuts to controls. It is not a generative AI model and does not promise to understand every question. No external AI API or paid fallback is used.
 
-Version **1.5.1** improves image recognition and repeated-button lists. Guided review, the Workspace menu, sharing links, collaborator cursors, editing, tutorials, GitHub publishing and configuration exports are retained.
+## Start
 
-## Start here
+Open `site/index.html` for local editing and ZIP export. For publishing and shared canvases, use the included Node service with `npm start` and the configuration in GITHUB-SETUP.md. Node 22.9 or newer is required. No new dependency or environment variable is needed.
 
-For local editing and ZIP export, open **site/index.html** in a desktop browser. For automatic image analysis, use the hosted creator or localhost.
+For your existing Render deployment, replace the release files in the creator repository and redeploy. Keep your existing environment variables, custom domain and GitHub OAuth settings. Back up important drafts as exported ZIPs first. Do not deploy or run `tests/browser-server.mjs` in production.
 
-For GitHub publishing and sharing, follow **GITHUB-SETUP.md** and run the included Node service with `npm start`. Node.js 22.9 or newer is required. There are no package dependencies to install. GitHub sign-in needs your registered OAuth app; credentials are not supplied in this ZIP.
+## Included
 
-For an existing Render installation, replace the matching **site/** and **server/** files and **package.json**, then redeploy. Keep your existing environment variables, custom domain and OAuth settings. **Do not deploy the browser test server.** See UPDATE-GUIDE.md.
+- `site/`: editor, help content, runtime, icons, tutorial and retained image-analysis tools.
+- `server/`: unchanged GitHub publishing and temporary sharing services.
+- `HELP-GUIDE.md`: guide behaviour, privacy, configuration and free-service research.
+- `UPDATE-GUIDE.md`: installation and existing editor controls.
+- `GITHUB-SETUP.md`, `SHARING.md`: publishing and collaboration setup/limits.
+- `DESIGN-ASSISTANT.md`, `TRAINING-STATUS.md`: retained image assistant and its limitations.
+- `TEST-REPORT.md`: checks actually completed for this release.
+- `tests/`: automated checks and optional browser harnesses.
 
-## What's new
+## Help configuration
 
-- **From image:** cropped, multiple-choice questions for uncertain navigation, logos, small controls and text. Confirmed controls become ordinary editable components. Missing controls can be marked manually. Images keep their proportions.
-- **Workspace:** Open GitHub, Share canvas, Sent links, file operations and creator appearance are grouped here. Website settings and Undo/Redo remain directly accessible.
-- **Share canvas:** create a fresh Viewer, Instance editor or Helper link each time.
-- **Sent links:** revoke one link or every active link created from this browser.
-- **Helper:** choose a name before joining. Remote cursors show names; the sender appears as Owner.
-- **Instance editor:** import a frozen, independent copy. Changes never affect the owner; imported copies remain after link deletion.
+`site/creator-config.js` controls `helpChat.enabled`, title, selection use and history length. `designAssistant.showLauncher` is false by default; set it to true to restore From image later. Its underlying feature remains enabled for development.
 
-Read DESIGN-ASSISTANT.md for analysis limits and SHARING.md for permissions, expiry and conflict recovery. This remains local OCR plus layout rules, with optional browser-native AI; it is not a universally trained screenshot reconstruction model. Sharing remains temporary, single-server storage.
+Everything authored in the portfolio still uses the existing configuration export system. Help messages stay in page memory; they are not saved in drafts, shared rooms or exported websites. The guide does not publish, remove content or change your layout.
 
-## Files
+## Validation
 
-- `site/`: browser creator, runtime, local recognition resources, icons and tutorial.
-- `server/`: GitHub service and temporary shared sessions.
-- `.env.example`: settings template; contains no credentials.
-- `GITHUB-SETUP.md`: hosting and OAuth setup.
-- `UPDATE-GUIDE.md`: update instructions and editor controls.
-- `DESIGN-ASSISTANT.md`, `SHARING.md`: feature guides and limits.
-- `tests/`, `site/verification/`: local verification harnesses.
-- `TEST-REPORT.md`: completed validation and scope.
-
-Authored content stays in `config/site.js` and `config/sections/<id>.js` in exported portfolios, with assets in section folders. Sharing tokens, names/cursors, editor controls and recognition libraries are excluded. Creator preferences remain in `site/creator-config.js`.
-
-## Verification
-
-Run `npm test` for server, model, layout and image-analysis checks.
-
-Run `npm run test:browser`, then open these local pages:
-
-- `/regression.html`: editor, layout, assets, scrolling and controls.
-- `/verification/editing.html`: editing and viewport checks.
-- `/verification/collaboration.html`: canvas controls and assets.
-- `/browser.html`: simulated GitHub publishing.
-- `/sharing-ui.html`: three link roles, helpers, conflicts, cursors, revocation and laptop layouts.
-- `/verification/design.html`: real OCR on synthetic references, review, export and simulated publishing.
-- `/fidelity.html` and `/guided.html`: the supplied private reference images, when installed as described in `tests/fixtures/README.md`.
-
-The test service uses synthetic GitHub accounts and in-memory repositories. It never contacts a real GitHub account. Private reference images are not distributed.
-
-See `site/README.md` for the full creator guide.
+Run `npm test`. The optional browser test server exposes `/help.html` for interaction and layout checks. Tests use simulated GitHub and must never be used as the public server. See TEST-REPORT.md for the current browser-access limitation.

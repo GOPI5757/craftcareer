@@ -1,3 +1,15 @@
+# Installing CraftCareer 1.6.0
+
+Replace the release files in your creator repository and redeploy. Keep existing Render environment variables, GitHub OAuth and domain settings. No new backend configuration, dependency, API key or paid service is required. Export important drafts first.
+
+- **? Help** opens the free built-in guide. It covers 53 workflows, suggests topics and can point to relevant controls. It is not an unrestricted generative AI chatbot.
+- **From image** is hidden. All its code, OCR resources and review tools remain. Set `designAssistant.showLauncher: true` in `site/creator-config.js` to bring the button back.
+- Help does not change the exported portfolio format. GitHub publishing, sharing and the existing renderer are retained.
+
+See HELP-GUIDE.md and TEST-REPORT.md for scope and verification.
+
+---
+
 ## Installing 1.5.1
 
 Replace the release files in your CraftCareer repository and let Render redeploy. Keep your existing Render environment variables and GitHub OAuth settings. Server routes and publishing credentials are unchanged. The release uses a new script version so browsers load the recognition update. Export important drafts as backups before updating.

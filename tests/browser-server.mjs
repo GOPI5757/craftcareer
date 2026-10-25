@@ -11,7 +11,7 @@ const root=fileURLToPath(new URL('.',import.meta.url));
 createServer(async(req,res)=>{try{
  const path=new URL(req.url,origin).pathname;
  if(path==='/__test__/technical-reference.png'){res.setHeader('Content-Type','image/png');res.end(await readFile(root+'fixtures/technical-reference.png'));return;}
- if(['/technical.html','/technical.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.slice(1)));return;}
+ if(['/help.html','/help.js','/technical.html','/technical.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.slice(1)));return;}
  if(path==='/__test__/guided-reference.png'){res.setHeader('Content-Type','image/png');res.end(await readFile(root+'fixtures/guided-reference.png'));return;}
  if(path==='/__test__/artist-reference.png'){res.setHeader('Content-Type','image/png');res.end(await readFile(root+'fixtures/artist-reference.png'));return;}
  if(['/fidelity.html','/fidelity.js','/guided.html','/guided.js','/sharing-ui.html','/sharing-ui.js'].includes(path)){res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(root+path.slice(1)));return;}
