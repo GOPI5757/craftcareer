@@ -15,5 +15,22 @@ function type({length,render,done=()=>{},cps=180,reduced=false,request=cb=>reque
  if(reduced||!length)finish();else{render(0);id=request(tick);}
  return {finish,cancel(){if(ended)return;ended=true;if(id!==null)cancel(id);}};
 }
-const api={segments,progress,type};G.CraftHelpPresentation=api;if(typeof module!=='undefined')module.exports=api;
+function followScroll(element,{request=cb=>requestAnimationFrame(cb),cancel=id=>cancelAnimationFrame(id),reduced=()=>false}={}){
+ let following=false,frame=null,intro=null,lastTime=null,written=element.scrollTop,settle=null;
+ const end=()=>Math.max(0,element.scrollHeight-element.clientHeight);
+ const resolve=()=>{const done=settle;settle=null;done?.();};
+ function pause(){following=false;if(frame!==null)cancel(frame);frame=null;intro=null;lastTime=null;resolve();}
+ function write(value){element.scrollTop=value;written=element.scrollTop;}
+ function tick(time){frame=null;if(!following)return;const target=end();
+  if(reduced()){write(target);intro=null;resolve();return;}
+  if(intro){if(intro.time===null)intro.time=time;const t=Math.min(1,(time-intro.time)/280);write(intro.from+(target-intro.from)*(1-Math.pow(1-t,3)));if(t===1){intro=null;resolve();}}
+  else{const delta=Math.min(64,Math.max(1,lastTime===null?16:time-lastTime));const value=element.scrollTop+(target-element.scrollTop)*(1-Math.exp(-delta/55));write(Math.abs(target-value)<.75?target:value);}
+  lastTime=time;if(intro||Math.abs(end()-element.scrollTop)>.75)update();
+ }
+ function update(){if(following&&frame===null)frame=request(tick);}
+ function resume(){pause();following=true;written=element.scrollTop;intro={from:element.scrollTop,time:null};const ready=new Promise(r=>settle=r);if(reduced()){write(end());intro=null;resolve();}else update();return ready;}
+ function scrolled(){if(following&&Math.abs(element.scrollTop-Math.min(written,end()))>2)pause();}
+ return {resume,pause,update,scrolled,get following(){return following;}};
+}
+const api={segments,progress,type,followScroll};G.CraftHelpPresentation=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

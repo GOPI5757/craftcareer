@@ -1,4 +1,4 @@
-# CraftCareer Help — 1.7.0
+# CraftCareer Help — 1.7.1
 
 Use **Help** to ask about CraftCareer. When the server is connected to Cloudflare, it generates an answer grounded in the reviewed CraftCareer guides. **Browse topics** and suggested guide buttons open the built-in guides locally. AI can make mistakes and cannot change your canvas or inspect your GitHub account.
 
@@ -10,7 +10,9 @@ AI questions and at most six recent messages go through the CraftCareer backend 
 
 ## Chat behaviour
 
-Answers type quickly with colored, heavier important words. Read more moves to the rest of a long answer; typing does not continually force scrolling to the end. Reduced-motion preferences show answers immediately. While a request is running, Send is disabled. Closing chat, choosing a guide, New chat or changing workspaces cancels a pending request and prevents late replies from appearing in the wrong conversation. Closing during the typing animation reveals the rest of the existing answer.
+Questions slide in subtly. Sending a question smoothly moves to the latest message before the answer types. The chat follows the growing answer until you scroll manually (wheel, touch, keyboard or scrollbar). Read more resumes following; a new question also resumes it. Reduced-motion preferences disable these animations.
+
+Send, Enter-to-send and topic buttons are blocked while an answer is being fetched or typed. You can draft the next question in the text box. Sending becomes available when the answer finishes. New chat, closing Help or replacing the workspace cancels a pending request. New chat also cancels typing; closing Help reveals the rest of an existing answer without scrolling.
 
 If AI is temporarily unavailable, the chat shows a brief message and local-guide choices. For a daily pause it shows the next UTC reset in the visitor's local date/time without mentioning usage allowances. Other failures show a short retry message.
 

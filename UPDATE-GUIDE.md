@@ -1,3 +1,11 @@
+# CraftCareer 1.7.1 — smooth chat and answer lock
+
+Questions slide in, sending smoothly returns to the latest message, and scrolling follows the typing answer until the user scrolls manually. Send and topic buttons stay unavailable until the answer finishes; the next question can still be drafted. Reduced-motion preferences are respected.
+
+Replace the previous package with this release and redeploy. Keep your existing Render environment variables; no backend or Cloudflare setup changes are needed. Portfolio configuration and all non-chat features are unchanged. See TEST-REPORT.md for verification and limits.
+
+## Previous release notes (historical)
+
 # CraftCareer 1.7.0 — Cloudflare AI help
 
 Cloudflare AI chat is implemented with CraftCareer guide context, recent conversation, temporary-unavailability handling and local guide access. Highlighted words now use colored, heavier text without underlines. The existing typing effect remains.

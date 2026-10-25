@@ -10,9 +10,12 @@
 @media(max-width:600px){#help-chat{right:.5rem;width:calc(100vw - 1rem);top:.5rem;bottom:.5rem;max-height:calc(100dvh - 1rem)}.help-chat-messages{padding:.7rem}}
 @media(prefers-reduced-motion:reduce){#help-chat *{scroll-behavior:auto!important}}
 
-/* Progressive answers retain their starting position; readers choose when to move down. */
+/* Follow the answer until the reader takes over; animate only newly sent questions. */
+.help-message-enter{animation:help-message-enter .2s ease-out both}
+@keyframes help-message-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.help-message-enter{animation:none}}
 #help-chat .help-keyword{font-weight:800;color:var(--accent);text-decoration:none}
 #help-chat .help-typing{display:block;color:var(--muted);font-size:.75rem;margin-bottom:.4rem}
 #help-chat .help-typing-line::after{content:"";display:inline-block;width:2px;height:.85em;background:var(--accent);margin-left:3px;vertical-align:baseline}
 #help-chat .help-read-more{align-self:center;flex:none;font-size:.8rem;margin:.2rem .5rem;padding:.3rem .8rem;border-color:var(--accent)}
-#help-chat .help-chat-messages{overflow-anchor:none}
+#help-chat .help-chat-messages{overflow-anchor:none;scroll-behavior:auto}

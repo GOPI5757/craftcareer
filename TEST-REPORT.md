@@ -1,37 +1,23 @@
-# CraftCareer 1.7.0 — verification report
+# CraftCareer 1.7.1 — verification report
 
-Date: 26 October 2026
+## Completed checks
 
-## Completed automated verification
+The complete automated suite passed **287 checks**: the existing 267 checks plus 12 scrolling-controller tests and 8 chat interaction/state tests. The latter use a lightweight simulated DOM, not a browser.
 
-The complete npm test suite passed **267 checks**:
+New cases cover smooth arrival before typing, following answer growth, manual interruption, native scroll versus programmatic scroll, resuming on a new question, reduced motion, footer growth, cancellation, local and remote reply locks, Enter and topic-button guards, draft preservation, late network replies, error recovery, and closing or clearing while scrolling/typing.
 
-| Suite | Checks |
-| --- | ---: |
-| GitHub service | 41 |
-| Shared canvas service | 21 |
-| Portfolio model | 30 |
-| Responsive layout | 11 |
-| Preserved design engine | 20 |
-| Design review | 9 |
-| Generated layouts (including 2,000 seeded layouts) | 7 |
-| Sharing links | 16 |
-| Local help | 66 |
-| Typing and safe emphasis | 14 |
-| Cloudflare backend/client transport | 32 |
+Existing suites cover GitHub (41), sharing service (21), model (30), responsive layout (11), design engine (20), design review (9), generated layouts including 2,000 seeded examples (7), sharing links (16), local help (66), typing/emphasis (14), and Cloudflare backend/client transport (32).
 
-Cloudflare tests use mocked upstream responses and real local HTTP requests. They cover successful answers and request format, curated guide context, history bounds, safe context fields, same-origin checks, session/CSRF protection, input limits, provider errors, 3036 daily pause and exact UTC reset, separate temporary-capacity handling, local daily ceiling, session expiry, timeouts, concurrency, rate throttling, no raw error/secret disclosure and local-time user messages. Client transport tests cover session renewal without repeating provider failures.
+Changed production JavaScript passed syntax checks. A source comparison confirms all server files, configuration, portfolio rendering/export, publishing and sharing code are unchanged. Production changes are limited to chat UI, its presentation helper/style and their cache-version references.
 
-Syntax checks passed for the changed JavaScript. Source comparisons confirm portfolio configuration/model/rendering/export, image-analysis, publishing UI, sharing UI/service and the existing GitHub route handlers are unchanged. New help routes are added before the existing routes. The only reviewed-guide change clarifies that AI help is now optional.
+The first fresh-extraction run hit a local HTTP `fetch failed` error in an existing server-delivery test. A complete rerun passed all 287 checks without source changes; the transient failure was not reproduced.
 
-## Important limits
+## Limits
 
-No live Cloudflare request was made: the owner's Account ID and API token were not supplied. Model answer quality, account permissions and live availability remain to be checked after configuration. The default model and request schema were checked against Cloudflare's current official model documentation.
+The browser tool reported that local browser access is disabled in Work settings. This release was not visually tested in a real browser. The optional browser harness is included but was not run. Simulated DOM and scrolling tests do not verify actual browser layout, animation appearance or assistive technology.
 
-Browser access reported disabled. The updated interface and existing browser harness were NOT run interactively. Screen-reader behaviour, visual contrast and layout remain unverified in a real browser in this release. No production deployment, GitHub repository modification or real publish was performed.
+Cloudflare tests use mocked responses, not live account credentials. No production deployment or real GitHub publication was performed.
 
-The in-memory application counters and pause state reset when the service restarts and are not shared across replicas. They are not a billing guarantee. Cloudflare enforces its own free allowance when the account remains on Workers Free. See CLOUDFLARE-SETUP.md.
+## Packaging
 
-## Package verification
-
-ZIP integrity and extracted-file hashes are checked before delivery. A fresh extraction runs the automated suite. Private screenshot fixtures, logs, credentials and local dependencies are excluded. No real secret is included; test-only credentials are synthetic.
+ZIP integrity and per-file byte comparisons passed. The full 287-check suite also passed from a fresh extraction. The ZIP excludes private reference screenshots, temporary logs and secrets. Existing tutorial/assets, image-analysis code and configuration format are preserved. No new environment variables are needed.
