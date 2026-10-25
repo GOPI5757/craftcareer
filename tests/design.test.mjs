@@ -14,7 +14,7 @@ const hero=()=>({width:1280,height:800,background:'#101724',regions:[
 ]});
 function allElements(sections){const elements=[];for(const s of sections)M.visitCells(s.grid,c=>{if(c.element)elements.push(c.element);});return elements;}
 test('Reject missing, malformed and excessive model output',()=>{for(const p of [null,{}, {regions:'bad'},{regions:Array(81).fill({})}])assert.throws(()=>D.normalize(p));});
-test('Sanitize all geometry, colors and component types',()=>{const r=D.normalize({width:Infinity,background:'url(https://evil)',regions:[{type:'script',x:-5,y:6,w:Infinity,h:-1,color:'red;script',text:'<script>alert(1)</script>',fontSize:99}]}).regions[0];assert.equal(r.type,'text');assert.equal(r.x,0);assert.ok(r.y<1);assert.ok(r.fontSize<=8);assert.equal(r.color,'#eeeeee');assert.equal(r.text,'<script>alert(1)</script>');});
+test('Sanitize all geometry, colors and component types',()=>{const r=D.normalize({width:Infinity,background:'url(https://evil)',regions:[{type:'script',x:-5,y:6,w:Infinity,h:-1,color:'red;script',text:'<script>alert(1)</script>',fontSize:99}]}).regions[0];assert.equal(r.type,'text');assert.equal(r.x,0);assert.ok(r.y<1);assert.ok(r.fontSize<=16);assert.equal(r.color,'#eeeeee');assert.equal(r.text,'<script>alert(1)</script>');});
 test('Compile real editable components into valid existing config schema',()=>{const out=D.compile(hero(),M),doc=M.fresh();doc.sections=out.sections;assert.deepEqual(M.validate(doc),[]);assert.ok(out.sections.length>=2);assert.equal(allElements(out.sections).length,8);assert.ok(allElements(out.sections).some(e=>e.type==='button'));assert.ok(allElements(out.sections).some(e=>e.type==='image'));});
 test('Generate independent mobile and tablet configuration patches',()=>{const out=D.compile(hero(),M),doc=M.fresh();doc.sections=out.sections;for(const device of ['mobile','tablet']){doc.deviceOverrides[device]=L.diff(L.resolve(doc),{...L.resolve(doc),sections:out[device]});assert.deepEqual(L.resolve(doc,device).sections,out[device]);assert.deepEqual(M.validate(L.resolve(doc,device)),[]);}assert.deepEqual(L.resolve(doc).sections,out.sections);});
 test('Desktop hero preserves margins, side by side media and nested text rows',()=>{const main=D.compile(hero(),M).sections[1],inside=main.grid.children[1];assert.equal(main.grid.direction,'columns');assert.equal(main.grid.children.length,3);assert.equal(inside.direction,'columns');assert.equal(inside.children.length,2);assert.equal(inside.children[0].direction,'rows');assert.equal(inside.children[0].children.length,4);});
@@ -27,3 +27,45 @@ test('OCR parses real TSV columns and combines paragraph lines',()=>{const data=
 test('Generated IDs and config survive JSON round trip',()=>{const out=D.compile(hero(),M,{name:'Test design',id:'test-design'}),doc=M.fresh();doc.sections=JSON.parse(JSON.stringify(out.sections));assert.deepEqual(M.validate(doc),[]);assert.ok(doc.sections.every(s=>s.id.startsWith('test-design')));});
 test('Overlapping regions never introduce absolute CSS or arbitrary JavaScript',()=>{const p=hero();p.regions=p.regions.slice(0,4).map(r=>({...r,x:.2,y:.2,w:.3,h:.1}));const out=D.compile(p,M);const text=JSON.stringify(out);assert.ok(!text.includes('position:'));assert.ok(!text.includes('javascript:'));assert.equal(allElements(out.sections).length,4);});
 test('Oversized text and nonfinite numeric values are bounded',()=>{const p=D.normalize({regions:[{text:'a'.repeat(10000),fontSize:'bad',weight:10000,w:NaN,h:NaN}]});assert.equal(p.regions[0].text.length,4000);assert.equal(p.regions[0].weight,900);assert.ok(Number.isFinite(p.regions[0].fontSize));});
+
+const photoPlan=()=>({width:1600,height:845,background:'#131312',regions:[
+ {type:'background',x:0,y:0,w:1,h:.1,text:'Header'},
+ {type:'text',x:.1,y:.04,w:.1,h:.02,text:'About',fontSize:.8},
+ {type:'background',x:0,y:.1,w:1,h:.9,text:'Landscape'},
+ {type:'text',x:.42,y:.42,w:.16,h:.03,text:'GAME ARTIST',fontSize:1.2,letterSpacing:.3},
+ {type:'text',x:.29,y:.49,w:.44,h:.24,text:'Portfolio',fontSize:9}
+]});
+test('Photographic backgrounds become section layers, never sibling image columns',()=>{
+ const p=photoPlan(),out=D.compile(p,M,{assets:{'region-1':'assets/header.webp','region-3':'assets/hero.webp'}});
+ assert.equal(out.sections.length,2);assert.equal(out.sections[0].surface.image,'assets/header.webp');assert.equal(out.sections[1].surface.image,'assets/hero.webp');
+ assert.equal(allElements(out.sections).length,3);assert.ok(allElements(out.sections).every(e=>e.type==='text'));
+ assert.ok(Math.abs(out.sections.reduce((n,s)=>n+s.height,0)-845/1600*80)<.001);
+ assert.deepEqual(M.validate({...M.fresh(),sections:out.sections}),[]);
+});
+test('Large headings and tracking survive config serialization',()=>{
+ const out=D.compile(photoPlan(),M),elements=allElements(JSON.parse(JSON.stringify(out.sections)));
+ assert.equal(elements.find(e=>e.text==='Portfolio').style.fontSize,9);
+ assert.equal(elements.find(e=>e.text==='GAME ARTIST').style.letterSpacing,.3);
+ assert.ok(elements.every(e=>e.style.referenceWidth===1280));
+});
+test('Reference insets are opt-in and do not leak into mobile stacking or ordinary layouts',()=>{
+ const out=D.compile(photoPlan(),M);let found=0;
+ out.sections.forEach(s=>M.visitCells(s.grid,c=>{if(c.element){assert.ok(c.referenceInset.enabled);found++;}}));assert.equal(found,3);
+ for(const s of [...out.mobile,...out.tablet,...D.compile(hero(),M).sections])M.visitCells(s.grid,c=>assert.equal(c.referenceInset,undefined));
+ for(const e of allElements(out.mobile))assert.equal(e.style.referenceWidth,undefined);
+});
+test('Background-only designs compile; ambiguous overlapping layers are rejected',()=>{
+ const p=photoPlan();p.regions=p.regions.filter(r=>r.type==='background');assert.equal(D.compile(p,M).sections.length,2);
+ p.regions[1].y=.05;assert.throws(()=>D.compile(p,M),/overlap/);
+});
+test('Cleanup removes detected source glyphs even after text is moved or excluded',()=>{
+ const width=60,height=40,data=new Uint8ClampedArray(width*height*4);for(let i=0;i<data.length;i+=4)data.set([30,20,10,255],i);
+ for(let y=10;y<18;y++)for(let x=10;x<18;x++)data.set([240,240,240,255],(y*width+x)*4);
+ const before=data.slice(),r={type:'text',enabled:false,x:.6,y:.6,w:.1,h:.1,color:'#ffffff',sourceBox:{x:10/width,y:10/height,w:8/width,h:8/height,color:'#f0f0f0'}};
+ const clean=D.cleanBackdrop({width,height,data},[r]);assert.deepEqual([...clean.slice((12*width+12)*4,(12*width+12)*4+3)],[30,20,10]);assert.deepEqual(data,before);assert.deepEqual([...clean.slice(0,4)],[30,20,10,255]);
+});
+test('Backdrop classification leaves ordinary side-by-side media unchanged',()=>{
+ const width=100,height=60,data=new Uint8ClampedArray(width*height*4);
+ assert.equal(D.findBackdrop({width,height,data},[{x:.6,y:.2,w:.35,h:.55}]),null);
+ assert.equal(D.findBackdrop({width,height:150,data:new Uint8ClampedArray(60000)},[{w:1,h:1}]),null);
+});

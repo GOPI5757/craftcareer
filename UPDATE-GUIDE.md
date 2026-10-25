@@ -73,3 +73,9 @@ Isolation, selection, editing markers and the context toolbar are creator contro
 ## Updating to 1.4 — image-to-layout assistant
 
 Deploy the updated source package, including `site/vendor/ocr-6.0.1/`. Existing environment variables and GitHub OAuth settings stay the same. There are no new secrets or paid AI endpoints. The server change only adds cache headers for the versioned local recognition resources. Existing portfolio config files remain compatible. See DESIGN-ASSISTANT.md.
+
+## Updating to 1.4.1 — photographic design reconstruction
+
+Replace the complete `site/` folder from this package, including `resources.js` and the local OCR resources, then redeploy. Cache-version tags have changed so the updated creator scripts load. The backend, environment variables, GitHub scopes, publish controls and sharing endpoints are unchanged from 1.4. Existing drafts and exported portfolios remain compatible.
+
+Reopen **From image** and analyse the original design again; existing generated sections are not automatically replaced. The assistant now separates a broad photographic background from its editable text, rejects low-confidence artwork readings, and preserves large headings and reference spacing. Review before applying. To avoid approximate cleanup marks, select the background region and supply its **Original artwork**. See DESIGN-ASSISTANT.md for limitations and config fields.

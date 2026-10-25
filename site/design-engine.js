@@ -11,12 +11,13 @@
     if (input.regions.length > 80) throw Error('Use a smaller screenshot: at most 80 regions can be reviewed at once.');
     const regions = input.regions.map((r, i) => {
       const x = clamp(r.x, 0, .99), y = clamp(r.y, 0, .995);
-      return {id: 'region-' + (i + 1), type: ['text', 'button', 'image'].includes(r.type) ? r.type : 'text',
+      return {id: 'region-' + (i + 1), type: ['text', 'button', 'image', 'background'].includes(r.type) ? r.type : 'text',
         x, y, w: clamp(r.w, .01, 1 - x, .3), h: clamp(r.h, .005, 1 - y, .05),
         text: String(r.text || '').slice(0, 4000), color: hex(r.color) || '#eeeeee',
-        background: hex(r.background) || '', fontSize: clamp(r.fontSize, .65, 8, 1.1),
+        background: hex(r.background) || '', fontSize: clamp(r.fontSize, .65, 16, 1.1),
         weight: clamp(r.weight, 100, 900, 400), align: ['left', 'center', 'right'].includes(r.align) ? r.align : 'left',
-        enabled: r.enabled !== false, confidence: clamp(r.confidence, 0, 100, 70)};
+        enabled: r.enabled !== false, confidence: clamp(r.confidence, 0, 100, 70), letterSpacing:clamp(r.letterSpacing,0,2,0),
+        ...(r.sourceBox?{sourceBox:{x:clamp(r.sourceBox.x,0,.99),y:clamp(r.sourceBox.y,0,.995),w:clamp(r.sourceBox.w,.001,1),h:clamp(r.sourceBox.h,.001,1),color:hex(r.sourceBox.color)||'#eeeeee'}}:{})};
     });
     return {width: clamp(input.width, 100, 6000, 1280), height: clamp(input.height, 100, 12000, 800), background: hex(input.background) || '#10151e', regions};
   }
@@ -107,12 +108,68 @@
     }
     return found.sort((a,b)=>a.y-b.y).slice(0,16);
   }
+  // A broad photographic region is a layer, not a sibling column of its overlaid text.
+  function findBackdrop(image,media) {
+    const W=image.width,H=image.height;
+    if(H/W>1.25||!media.some(r=>r.w>.65&&r.h>.5&&r.w*r.h>.5))return null;
+    const p=pixels(image),step=Math.max(2,Math.floor(H/400)),busy=[];
+    for(let y=0;y<H;y+=step){const cs=Array.from({length:30},(_,i)=>p.at((i+.5)*W/30,y)),median=[0,1,2].map(k=>cs.map(c=>c[k]).sort((a,b)=>a-b)[15]);busy.push(cs.filter(c=>distance(c,median)>30).length>=10);}
+    // Text-free dark bands within a photo are still part of the same backdrop.
+    for(let i=1;i<busy.length;i++){if(busy[i])continue;let j=i;while(j<busy.length&&!busy[j])j++;if(busy[i-1]&&busy[j]&&j-i<busy.length*.12)for(let k=i;k<j;k++)busy[k]=true;i=j;}
+    let best={start:0,end:0},start=-1;
+    for(let i=0;i<=busy.length;i++){if(busy[i]){if(start<0)start=i;}else if(start>=0){if(i-start>best.end-best.start)best={start,end:i};start=-1;}}
+    if((best.end-best.start)*step/H<.5)return null;
+    const top=best.start*step/H,bottom=Math.min(1,best.end*step/H);
+    return {type:'background',x:0,y:top,w:1,h:bottom-top,text:'Photographic background',confidence:80};
+  }
+  // Neutral bright/dark lettering remains readable over artwork; image texture is suppressed.
+  function letteringMask(image,backdrop) {
+    const out=new Uint8ClampedArray(image.data.length),W=image.width,H=image.height;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,c=Array.from(image.data.slice(i,i+3)),hi=Math.max(...c),lo=Math.min(...c);
+      const inside=y/H>=backdrop.y&&y/H<=backdrop.y+backdrop.h;
+      const ink=inside?lo>120&&hi-lo<70:lo>110&&hi-lo<100;
+      out[i]=out[i+1]=out[i+2]=ink?0:255;out[i+3]=255;
+    }return out;
+  }
+  function inkGroups(image) {
+    const W=image.width,H=image.height,seen=new Uint8Array(W*H),parts=[];
+    for(let n=0;n<W*H;n++){if(seen[n]||image.data[n*4]>100)continue;const queue=[n];seen[n]=1;let x0=W,y0=H,x1=0,y1=0;
+      for(let q=0;q<queue.length;q++){const i=queue[q],x=i%W,y=Math.floor(i/W);x0=Math.min(x0,x);x1=Math.max(x1,x+1);y0=Math.min(y0,y);y1=Math.max(y1,y+1);
+        for(const [dx,dy]of [[-1,0],[1,0],[0,-1],[0,1]]){const xx=x+dx,yy=y+dy,k=yy*W+xx;if(xx>=0&&xx<W&&yy>=0&&yy<H&&!seen[k]&&image.data[k*4]<100){seen[k]=1;queue.push(k);}}}
+      if(queue.length>=4&&y1-y0>=4&&x1-x0>=2&&y1-y0<H*.3&&x1-x0<W*.8)parts.push({x:x0,y:y0,w:x1-x0,h:y1-y0});
+    }
+    const groups=[];
+    for(const p of parts.sort((a,b)=>a.x-b.x)){const g=groups.find(g=>p.x-g.right<Math.max(p.h,g.h)*2.3&&p.x>=g.right-3&&Math.min(p.y+p.h,g.bottom)-Math.max(p.y,g.y)>Math.min(p.h,g.h)*.45&&Math.max(p.h,g.h)/Math.min(p.h,g.h)<2.8);
+      if(g){g.right=p.x+p.w;g.y=Math.min(g.y,p.y);g.bottom=Math.max(g.bottom,p.y+p.h);g.h=g.bottom-g.y;g.count++;}else groups.push({...p,right:p.x+p.w,bottom:p.y+p.h,count:1});}
+    return groups.filter(g=>g.count>=2&&g.right-g.x>g.h&&g.h>5).sort((a,b)=>a.y-b.y).slice(0,35).map(g=>({x:Math.max(0,g.x-4)/W,y:Math.max(0,g.y-4)/H,w:Math.min(W-g.x+4,g.right-g.x+8)/W,h:Math.min(H-g.y+4,g.h+8)/H}));
+  }
+  // Fill only detected lettering. This is approximate local cleanup, not recovery of hidden artwork.
+  function cleanBackdrop(image,regions) {
+    const W=image.width,H=image.height,src=image.data,out=new Uint8ClampedArray(src),mask=new Uint8Array(W*H);
+    for(const region of regions){if(!region.sourceBox&&(!region.enabled||!['text','button'].includes(region.type)))continue;const r=region.sourceBox||region;
+      const color=(r.color.match(/\w\w/g)||[]).map(c=>parseInt(c,16)),x0=Math.max(0,Math.floor(r.x*W)-3),x1=Math.min(W,Math.ceil((r.x+r.w)*W)+3),y0=Math.max(0,Math.floor(r.y*H)-3),y1=Math.min(H,Math.ceil((r.y+r.h)*H)+3);
+      for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*W+x)*4;if(Math.hypot(src[i]-color[0],src[i+1]-color[1],src[i+2]-color[2])<95)mask[y*W+x]=1;}
+    }
+    const grown=mask.slice();for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++)if(mask[y*W+x])for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)grown[(y+dy)*W+x+dx]=1;
+    const pending=grown.slice(),queue=[],neighbors=n=>[n-W,n+W,...(n%W?[n-1]:[]),...(n%W<W-1?[n+1]:[])].filter(i=>i>=0&&i<W*H);
+    for(let n=0;n<pending.length;n++)if(pending[n]&&neighbors(n).some(i=>!grown[i])){queue.push(n);pending[n]=2;}
+    for(let q=0;q<queue.length;q++){const n=queue[q],good=neighbors(n).filter(i=>!grown[i]);if(!good.length)continue;for(let k=0;k<3;k++)out[n*4+k]=Math.round(good.reduce((sum,i)=>sum+out[i*4+k],0)/good.length);grown[n]=0;
+      for(const i of neighbors(n))if(pending[i]===1){pending[i]=2;queue.push(i);}}
+    return out;
+  }
   function compile(raw, M, {name = 'Design from image', id = 'design-from-image', assets = {}} = {}) {
-    const plan = normalize(raw), active = plan.regions.filter(r => r.enabled), notes = [];
-    if (!active.length) throw Error('Add or enable at least one region before creating the layout.');
+    const plan = normalize(raw), backdrops=plan.regions.filter(r=>r.enabled&&r.type==='background'), notes = [];
+    for(let i=0;i<backdrops.length;i++)for(let j=0;j<i;j++)if(Math.min(backdrops[i].y+backdrops[i].h,backdrops[j].y+backdrops[j].h)-Math.max(backdrops[i].y,backdrops[j].y)>.005)throw Error('Background layers overlap. Adjust their top and height so each covers its own section.');
+    const active=plan.regions.filter(r=>r.enabled&&r.type!=='background').map(r=>{
+      if(!backdrops.length||!['text','button'].includes(r.type))return r;
+      const scale=plan.height/plan.width*80,line=r.fontSize*1.1,glyph=r.h/1.5*scale;
+      return {...r,y:Math.max(0,r.y-Math.max(0,line-glyph)/2/scale),h:Math.max(r.h,line/scale)};
+    });
+    if (!active.length&&!backdrops.length) throw Error('Add or enable at least one region before creating the layout.');
     const unit = 80, aspect = plan.height / plan.width;
     const regionElement = r => {
-      const e = M.element(r.type); e.style = {...e.style, color: r.color, fontSize: r.fontSize, fontWeight: r.weight, textAlign: r.align, lineHeight: 1.25, borderRadius: 0};
+      const e = M.element(r.type); e.style = {...e.style, color: r.color, fontSize: r.fontSize, fontWeight: r.weight, textAlign: r.align, lineHeight: 1.25, borderRadius: 0,letterSpacing:r.letterSpacing};
+      if(backdrops.length){e.style.fontFamily='Arial, sans-serif';e.style.referenceWidth=1280;}
       if (r.type === 'image') {e.src = assets[r.id] || ''; e.alt = r.text || 'Image from reference'; e.height = Math.max(2, r.h * aspect * unit); e.lightbox = false;}
       else {e.text = r.text; if (r.type === 'text') e.tag = r.fontSize >= 2.3 ? 'h2' : 'p';
         else {e.icon = ''; e.style.background = r.background ? [r.background] : []; e.style.borderWidth = 0; e.style.borderRadius = .4; e.style.padding = .6; e.hoverBackground = r.background || 'transparent'; e.clickBackground = r.background || 'transparent'; e.hoverColor = r.color; e.clickColor = r.color;}}
@@ -124,7 +181,10 @@
         const r = rs[0], margin = Math.min(Math.max(0, r.x - box.x), Math.max(0, box.right - r.x - r.w), Math.max(0, (r.y - box.y) * aspect), Math.max(0, (box.bottom - r.y - r.h) * aspect));
         c.padding = Math.min(3, margin * unit); const cx = (r.x + r.w / 2 - box.x) / (box.right - box.x), cy = (r.y + r.h / 2 - box.y) / (box.bottom - box.y);
         c.align = (cx < .38 ? 'left' : cx > .62 ? 'right' : 'center') + (cy < .38 ? ' top' : cy > .62 ? ' bottom' : '');
-        c.element = regionElement(r); return c;
+        c.element = regionElement(r);
+        if(backdrops.length){
+          c.padding=0;c.align='left top';c.referenceInset={enabled:true,left:Math.max(0,(r.x-box.x)/(box.right-box.x)*100),right:Math.max(0,(box.right-r.x-r.w)/(box.right-box.x)*100),top:Math.max(0,(r.y-box.y)/(box.bottom-box.y)*100),bottom:0};c.element.style.lineHeight=1.1;
+        }return c;
       }
       if (depth >= 3) {
         if (rs.every(r => r.type === 'text')) {
@@ -166,10 +226,13 @@
     const sorted = active.slice().sort((a, b) => a.y - b.y), bands = []; let group = [], bottom = 0;
     for (const r of sorted) {if (group.length && r.y - bottom > .055) {bands.push(group); group = [];} group.push(r); bottom = Math.max(bottom, r.y + r.h);}
     if (group.length) bands.push(group);
-    const sections = bands.map((rs, i) => {const top = i === 0 ? 0 : (bounds(bands[i - 1]).bottom + bounds(rs).y) / 2, end = i === bands.length - 1 ? 1 : (bounds(rs).bottom + bounds(bands[i + 1]).y) / 2;
-      const s = M.section(bands.length === 1 ? name : name + ' · ' + (i + 1), 'flexible'); s.id = bands.length === 1 ? id : id + '-' + (i + 1); s.height = Math.max(4, (end - top) * aspect * unit); s.surface.background = [plan.background]; s.surface.overlay.enabled = false; s.gap = 0;
+    const sectionRanges=backdrops.length?Array.from(new Set([0,1,...backdrops.flatMap(b=>[b.y,b.y+b.h])])).sort((a,b)=>a-b).slice(0,-1).map((top,i,starts)=>({top,end:starts[i+1]??1})).filter(b=>b.end-b.top>.002):bands.map((rs,i)=>({top:i===0?0:(bounds(bands[i-1]).bottom+bounds(rs).y)/2,end:i===bands.length-1?1:(bounds(rs).bottom+bounds(bands[i+1]).y)/2,rs}));
+    const sections = sectionRanges.map(({top,end,rs:provided}, i) => {const rs=provided||active.filter(r=>r.y+r.h*.33>=top&&r.y+r.h*.33<end);
+      const s = M.section(sectionRanges.length === 1 ? name : name + ' · ' + (i + 1), 'flexible'); s.id = sectionRanges.length === 1 ? id : id + '-' + (i + 1); s.height = Math.max(2, (end - top) * aspect * unit); s.surface.background = [plan.background]; s.surface.overlay.enabled = false; s.gap = 0;
+      const backdrop=backdrops.find(b=>top>=b.y-.001&&end<=b.y+b.h+.001);if(backdrop){s.surface.image=assets[backdrop.id]||'';s.surface.imageFit='fill';}
+      if(!rs.length)return s;
       const extent=bounds(active),left=extent.x>.015?extent.x:0,right=1-extent.right>.015?1-extent.right:0;
-      if(left||right){try{const inner=tree(rs,{x:left,y:top,right:1-right,bottom:end},1),outer=M.cell();outer.gap=0;outer.direction='columns';outer.children=[];outer.ratios=[];
+      if(!backdrops.length&&(left||right)){try{const inner=tree(rs,{x:left,y:top,right:1-right,bottom:end},1),outer=M.cell();outer.gap=0;outer.direction='columns';outer.children=[];outer.ratios=[];
         if(left){const margin=M.cell();margin.gap=0;outer.children.push(margin);outer.ratios.push(left*100);}outer.children.push(inner);outer.ratios.push((1-left-right)*100);
         if(right){const margin=M.cell();margin.gap=0;outer.children.push(margin);outer.ratios.push(right*100);}s.grid=outer;
       }catch{s.grid=tree(rs,{x:0,y:top,right:1,bottom:end});notes.push('Outer spacing was simplified to keep this section within the supported grid depth.');}}
@@ -178,20 +241,21 @@
     function responsive(s, device) {
       const copy = M.clone(s), width = device === 'mobile' ? 22 : 45;
       function adjust(c) {
-        c.padding = Math.min(c.padding, 1); c.align = 'left top';
+        delete c.referenceInset;c.padding = Math.min(c.padding, 1); c.align = 'left top';
         if (c.children.length) {const sizes = c.children.map(adjust); c.direction = 'rows'; c.ratios = sizes.map(h => h / sizes.reduce((a, b) => a + b, 0) * 100); c.gap = .75; return sizes.reduce((a, b) => a + b, 0) + (sizes.length - 1) * .75 + c.padding * 2;}
         const e = c.element; if (!e) {c.enabled=false;return .01;}
         if (e.type === 'image') {e.height = Math.min(device === 'mobile' ? 18 : 26, e.height); return e.height + .5;}
-        e.style.fontSize = Math.max(.85, Math.min(device === 'mobile' ? 2.5 : 3.5, e.style.fontSize));
-        if (e.type === 'list') {e.items.forEach(t => t.style.fontSize = Math.min(2.5, t.style.fontSize)); return e.items.reduce((n, t) => n + Math.ceil(t.text.length / 32) * t.style.fontSize * 1.4 + .5, 0);}
+        delete e.style.referenceWidth;e.style.fontSize = Math.max(.85, Math.min(device === 'mobile' ? 2.5 : 3.5, e.style.fontSize));
+        if (e.type === 'list') {e.items.forEach(t => {delete t.style.referenceWidth;t.style.fontSize = Math.min(2.5, t.style.fontSize);}); return e.items.reduce((n, t) => n + Math.ceil(t.text.length / 32) * t.style.fontSize * 1.4 + .5, 0);}
         return Math.max(e.type === 'button' ? 3.5 : 2, (String(e.text).split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length * e.style.fontSize * .57 / width)), 0)) * e.style.fontSize * 1.4 + 1) + c.padding * 2;
       }
-      copy.height = adjust(copy.grid) + 2; copy.padding = 1; return copy;
+      copy.height = Math.max(copy.surface.image?16:0,adjust(copy.grid) + 2); copy.padding = 1;if(backdrops.length)copy.surface.imageFit='cover'; return copy;
     }
     if (active.some(r => r.type === 'button')) notes.push('Button destinations cannot be read from a screenshot. Set their actions in the inspector.');
+    if(backdrops.length)notes.push('Artwork behind text is reconstructed approximately. Replace the background with the original artwork for a clean result. Logos and icons may need to be added manually.');
     notes.push('Fonts, spacing and mobile stacking are approximations. Every generated component remains editable.');
     return {sections, mobile: sections.map(s => responsive(s, 'mobile')), tablet: sections.map(s => responsive(s, 'tablet')), notes};
   }
-  const api = {normalize, fromOCR, findMedia, findButtons, compile, pixels, clamp};
+  const api = {normalize, fromOCR, findMedia, findButtons, findBackdrop, letteringMask, inkGroups, cleanBackdrop, compile, pixels, clamp};
   G.CraftDesign = api; if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);

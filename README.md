@@ -37,3 +37,5 @@ For the detailed existing editor instructions, see `site/README.md`.
 Choose **From image** to upload a reference design and create editable sections. Local OCR and layout analysis need no AI key. Preview and correct regions before applying; generated content uses the normal config files and supports Undo, export, publishing and re-import. Optional browser-native vision AI is available only on supported devices. Read [DESIGN-ASSISTANT.md](DESIGN-ASSISTANT.md) for the workflow, limits and deployment details.
 
 For the image assistant browser checks, run `npm run test:browser` and open `http://localhost:18988/verification/design.html`. This uses local fixtures and simulated GitHub, never a production account.
+
+Version 1.4.1 fixes photographic hero reconstruction: backgrounds are section layers and recognized lettering stays editable. See [UPDATE-GUIDE.md](UPDATE-GUIDE.md) and [TEST-REPORT.md](TEST-REPORT.md). The actual-image regression harness is `/fidelity.html`; its privately supplied reference is not distributed. See `tests/fixtures/README.md`.

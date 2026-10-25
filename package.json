@@ -1,6 +1,6 @@
 {
   "name": "craftcareer",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "CraftCareer portfolio creator with local image-to-layout assistance, GitHub publishing and shared canvases",
   "engines": {

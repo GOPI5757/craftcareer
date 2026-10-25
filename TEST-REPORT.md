@@ -1,4 +1,4 @@
-# CraftCareer 1.4 verification report
+# CraftCareer 1.4.1 verification report
 
 Date: 25 October 2026.
 
@@ -14,9 +14,10 @@ Date: 25 October 2026.
 | Browser editing and viewport | 25 |
 | Browser publishing with simulated GitHub | 30 |
 | Browser collaboration, assets and new controls | 22 |
-| Image analysis / grid compiler | 14 |
+| Image analysis / grid compiler | 20 |
 | Browser image assistant, real OCR and generated publishing | 31 |
-| **Total** | **336** |
+| Actual user-image fidelity and export | 20 |
+| **Total** | **362** |
 
 See README.md for commands and browser harness URLs. The delivery ZIP is checked for integrity, every packaged file is compared with the tested source, and the Node suites are run again from the extracted package.
 
@@ -56,6 +57,18 @@ Generated layouts were rendered at 320, 390, 768 and 1280 pixels and checked for
 
 The native browser vision adapter has mock contract checks for multimodal input, constrained output, validation and session cleanup. The actual native model was unavailable in the test browser, so its real image-understanding quality is not claimed as tested. The default local OCR path was tested with actual inference, not mocked recognition.
 
-Visual review confirmed the reference/result comparison and manual application into three real editor sections. Recognition and layout remain approximate; source text, typography and mobile flow need user review. This is not a trained-from-scratch general vision model or a guarantee of reproducing every design.
+Visual review confirmed the actual user-uploaded artist screenshot in the normal reference/result interface and application into two real editor sections. Clicking the Portfolio heading opened its editable text controls. Recognition and layout remain approximate; source text, typography and mobile flow need user review. This is not a trained-from-scratch general vision model or a guarantee of reproducing every design.
 
 The AI browser harness is under tests/, served only by the local test server at /verification/design.html. It refuses to run without that server's synthetic test endpoint. It is excluded from the production Docker build.
+
+## Actual reported failure: photographic hero
+
+The supplied 2557 × 1351 artist-portfolio screenshot was used with the real local OCR model. All nine principal text groups were detected, including the small email address; the title was no longer part of a giant sibling image and the stray gibberish columns were absent. Two section background assets carry the header and landscape. The recognized lettering is represented by nine actual text components.
+
+The dedicated 20-check harness covers extraction, background separation, original glyph bounds, compressed assets, valid bounded grids, desktop positions/widths, unclipped text at 320/390/768/1024/1600/1920 widths, optional clean-artwork replacement, stable cleanup after editing/excluding text, preservation of existing work and publishing identity, undo/redo, toolbar font selection, reference-spacing controls, config-backed text edits, export and reimport.
+
+At the 1280-pixel reference width, automated geometry checks compare each detected text component's horizontal position, width and estimated line-box position with its source bounds. These are positioning checks, not a pixel-similarity score or proof of exact typography. A browser screenshot records the normal review UI for visual comparison. The supplied reference fixture remains local and is not included in the distributed creator package; instructions are in tests/fixtures/README.md.
+
+The landscape cleanup is a local approximation. Original logos, social symbols and screenshot scrollbar pixels can remain in the raster background. Fonts are approximated using Arial for this detection mode; mobile/tablet flow is generated, not recoverable from the desktop screenshot. A clean original artwork image can replace the reconstructed background before applying. No claim of universal or pixel-perfect design reconstruction is made.
+
+The backend server, publishing module, sharing module, original icon assets and tutorial media are byte-identical to 1.4.0. Changed runtime behavior is opt-in for imported reference spacing; ordinary existing cells retain their prior behavior.
