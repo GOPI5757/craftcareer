@@ -1,41 +1,53 @@
 # CraftCareer · By Gopinath
 
-Version 1.3 improves live website updates, adds direct canvas and asset controls, and introduces temporary shared canvases with viewer/editor links. The existing tutorial, config-based exports, asset library and authentication setup are retained. See **UPDATE-GUIDE.md** for every new control and deployment instructions.
+Version **1.5.0** adds guided image review, a more spacious Workspace menu, independently managed sharing links, and named collaborator cursors. Existing editing, tutorials, GitHub publishing and configuration exports are retained.
 
 ## Start here
 
-For editing and ZIP export only, open **site/index.html** in a desktop browser. No account or server is required for those features.
+For local editing and ZIP export, open **site/index.html** in a desktop browser. For automatic image analysis, use the hosted creator or localhost.
 
-For **Connect GitHub, Publish, Update, Open GitHub, Open live website, Unpublish and Disconnect**, follow **GITHUB-SETUP.md**. This integration includes a small Node.js service. GitHub sign-in requires your own registered OAuth app and its secret; credentials are not preconfigured in the ZIP.
+For GitHub publishing and sharing, follow **GITHUB-SETUP.md** and run the included Node service with `npm start`. Node.js 22.9 or newer is required. There are no package dependencies to install. GitHub sign-in needs your registered OAuth app; credentials are not supplied in this ZIP.
 
-Once configured, start the service with `npm start` and use its website address. There are no package dependencies to install. Node.js 22.9 or newer is required (Node 24 LTS is recommended).
+For an existing Render installation, replace the matching **site/** and **server/** files and **package.json**, then redeploy. Keep your existing environment variables, custom domain and OAuth settings. **Do not deploy the browser test server.** See UPDATE-GUIDE.md.
+
+## What's new
+
+- **From image:** cropped, multiple-choice questions for uncertain navigation, logos, small controls and text. Confirmed controls become ordinary editable components. Missing controls can be marked manually. Images keep their proportions.
+- **Workspace:** Open GitHub, Share canvas, Sent links, file operations and creator appearance are grouped here. Website settings and Undo/Redo remain directly accessible.
+- **Share canvas:** create a fresh Viewer, Instance editor or Helper link each time.
+- **Sent links:** revoke one link or every active link created from this browser.
+- **Helper:** choose a name before joining. Remote cursors show names; the sender appears as Owner.
+- **Instance editor:** import a frozen, independent copy. Changes never affect the owner; imported copies remain after link deletion.
+
+Read DESIGN-ASSISTANT.md for analysis limits and SHARING.md for permissions, expiry and conflict recovery. This remains local OCR plus layout rules, with optional browser-native AI; it is not a universally trained screenshot reconstruction model. Sharing remains temporary, single-server storage.
 
 ## Files
 
-- `site/` — the complete browser-based creator, existing tutorial and offline resources.
-- `SHARING.md` — shared-canvas setup, permissions, limits and recovery.
-- `server/sharing.mjs` — temporary collaboration sessions; included in the same Node service.
-- `server/server.mjs` — authentication, repository uploads and Pages management; serves `site/` only.
-- `.env.example` — local server settings template, containing no credentials.
-- `GITHUB-SETUP.md` — setup, hosting, permissions, user workflow and troubleshooting.
-- `tests/` — automated service checks and local simulated GitHub browser tests.
-- `TEST-REPORT.md` — validation performed for this release.
-- `Dockerfile` — optional deployment container.
+- `site/`: browser creator, runtime, local recognition resources, icons and tutorial.
+- `server/`: GitHub service and temporary shared sessions.
+- `.env.example`: settings template; contains no credentials.
+- `GITHUB-SETUP.md`: hosting and OAuth setup.
+- `UPDATE-GUIDE.md`: update instructions and editor controls.
+- `DESIGN-ASSISTANT.md`, `SHARING.md`: feature guides and limits.
+- `tests/`, `site/verification/`: local verification harnesses.
+- `TEST-REPORT.md`: completed validation and scope.
 
-The creator’s Publish button is separate from Settings. Creator-level options are in `site/creator-config.js` under `publishing`. The portfolio remains config-driven: its public repository association is saved under `site.publishing` in the exported `config/site.js`. OAuth tokens and secrets never go into that configuration or website ZIP.
+Authored content stays in `config/site.js` and `config/sections/<id>.js` in exported portfolios, with assets in section folders. Sharing tokens, names/cursors, editor controls and recognition libraries are excluded. Creator preferences remain in `site/creator-config.js`.
 
-## Tests
+## Verification
 
-Run `npm test` for service, model and layout checks. Run `npm run test:browser`, then visit `http://localhost:18988/browser.html` for publishing integration checks and `/regression.html` for editor regression checks. Open `/verification/editing.html` for editing and viewport checks, and `/verification/collaboration.html` for the new canvas controls, asset workflows and multi-participant sharing checks. The browser test server uses synthetic accounts and repositories held in memory; it never calls GitHub. **Do not deploy the test server.**
+Run `npm test` for server, model, layout and image-analysis checks.
 
-Shared canvases require this same Node server; no new environment variable or database is needed. This first version supports a single running server instance and temporary sessions, not permanent cloud storage. See **SHARING.md** before enabling it for users.
+Run `npm run test:browser`, then open these local pages:
 
-For the detailed existing editor instructions, see `site/README.md`.
+- `/regression.html`: editor, layout, assets, scrolling and controls.
+- `/verification/editing.html`: editing and viewport checks.
+- `/verification/collaboration.html`: canvas controls and assets.
+- `/browser.html`: simulated GitHub publishing.
+- `/sharing-ui.html`: three link roles, helpers, conflicts, cursors, revocation and laptop layouts.
+- `/verification/design.html`: real OCR on synthetic references, review, export and simulated publishing.
+- `/fidelity.html` and `/guided.html`: the supplied private reference images, when installed as described in `tests/fixtures/README.md`.
 
-## Image-to-layout assistant (1.4)
+The test service uses synthetic GitHub accounts and in-memory repositories. It never contacts a real GitHub account. Private reference images are not distributed.
 
-Choose **From image** to upload a reference design and create editable sections. Local OCR and layout analysis need no AI key. Preview and correct regions before applying; generated content uses the normal config files and supports Undo, export, publishing and re-import. Optional browser-native vision AI is available only on supported devices. Read [DESIGN-ASSISTANT.md](DESIGN-ASSISTANT.md) for the workflow, limits and deployment details.
-
-For the image assistant browser checks, run `npm run test:browser` and open `http://localhost:18988/verification/design.html`. This uses local fixtures and simulated GitHub, never a production account.
-
-Version 1.4.1 fixes photographic hero reconstruction: backgrounds are section layers and recognized lettering stays editable. See [UPDATE-GUIDE.md](UPDATE-GUIDE.md) and [TEST-REPORT.md](TEST-REPORT.md). The actual-image regression harness is `/fidelity.html`; its privately supplied reference is not distributed. See `tests/fixtures/README.md`.
+See `site/README.md` for the full creator guide.

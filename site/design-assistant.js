@@ -2,6 +2,7 @@
   'use strict';
   const config = window.CRAFTCAREER_CONFIG?.designAssistant || {};
   if (config.enabled === false) return;
+  const R=CraftDesignReview;
   const D = CraftDesign, M = ForgeModel, L = CraftLayout;
   const E = (tag, props = {}, children = []) => {const n = document.createElement(tag); for (const [k, v] of Object.entries(props)) {if (k === 'text') n.textContent = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else if (k === 'class') n.className = v; else if (k in n) n[k] = v; else n.setAttribute(k, v);} n.append(...(Array.isArray(children) ? children : [children])); return n;};
   const button = (text, fn, cls = '') => E('button', {text, onclick: fn, class: cls, type: 'button'});
@@ -79,7 +80,7 @@
   }
   async function analyse(canvas, {signal, progress = () => {}, mode = 'local',diagnostics=()=>{}} = {}) {
     check(signal);
-    if (mode === 'native') return nativePlan(canvas, signal, progress);
+    if (mode === 'native') return R.propose(await nativePlan(canvas, signal, progress),canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height));
     const image = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height), media=D.findMedia(image,[]),backdrop=D.findBackdrop(image,media),buttonRegions=backdrop?[]:D.findButtons(image,media);
     const clean=E('canvas',{width:canvas.width,height:canvas.height}),ctx=clean.getContext('2d'),bg=D.pixels(image).dominant(0,0,canvas.width,canvas.height);
     ctx.drawImage(canvas,0,0);ctx.fillStyle='rgb('+bg.map(Math.round).join(',')+')';
@@ -94,7 +95,7 @@
     // Texture can resemble letters. Discard OCR hits contained in a detected picture.
     if(!backdrop)plan.regions=plan.regions.filter(t=>!media.some(r=>t.x+t.w*.5>=r.x&&t.x+t.w*.5<=r.x+r.w&&t.y+t.h*.5>=r.y&&t.y+t.h*.5<=r.y+r.h));
     else {plan.background='#'+D.pixels(image).dominant(0,0,canvas.width,Math.max(1,backdrop.y*canvas.height*.5)).map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
-      plan.regions=plan.regions.filter(t=>t.confidence>=65&&/[a-zA-Z]{2}/.test(t.text)&&t.w*canvas.width>t.h*canvas.height*.7&&!(t.y>backdrop.y&&t.text.trim().length<=2&&t.w<.025));
+      plan.regions=plan.regions.filter(t=>t.confidence>=45&&/[a-zA-Z]{2}/.test(t.text)&&t.w*canvas.width>t.h*canvas.height*.7&&!(t.y>backdrop.y&&t.text.trim().length<=2&&t.w<.025));
       const keep=[];for(const t of plan.regions.sort((a,b)=>b.confidence-a.confidence)){if(!keep.some(r=>Math.abs(r.x-t.x)<.015&&Math.abs(r.y-t.y)<.012))keep.push(t);}plan.regions=keep;
       for(const r of plan.regions){r.type='text';r.background='';r.weight=400;r.sourceBox={x:r.x,y:r.y,w:r.w,h:r.h,color:r.color};
         ctx.font='100px Arial';const metrics=ctx.measureText(r.text),glyphH=r.h*canvas.height/1.5,glyphW=r.w*canvas.width-glyphH*.3,capHeight=(metrics.actualBoundingBoxAscent+metrics.actualBoundingBoxDescent)||75;
@@ -105,12 +106,12 @@
     plan.regions=plan.regions.filter(t=>!buttons.some(r=>t.x+t.w/2>=r.x&&t.x+t.w/2<=r.x+r.w&&t.y+t.h/2>=r.y&&t.y+t.h/2<=r.y+r.h));
     for(const r of buttons){const channels=r.background.match(/\w\w/g).map(v=>parseInt(v,16));plan.regions.push({...r,type:'button',color:channels.reduce((a,b)=>a+b,0)>440?'#101724':'#ffffff',fontSize:Math.max(.85,r.h*canvas.height/canvas.width*80*.4)});}
     plan.regions.push(...(backdrop?[...(backdrop.y>.02?[{...backdrop,y:0,h:backdrop.y,text:'Header artwork'}]:[]),backdrop]:media));plan.regions.sort((a,b)=>a.y-b.y||a.x-b.x);
-    return D.normalize(plan);
+    return R.propose(D.normalize(plan),image);
   }
   async function crops(canvas, plan, current=()=>true, replacements=new Map()) {
     const out = new Map();let total=0;
     let cleaned;
-    for (const r of plan.regions.filter(r => r.enabled && ['image','background'].includes(r.type))) {
+    for (const r of plan.regions.filter(r => r.enabled && (['image','background'].includes(r.type)||r.visual==='crop'))) {
       if(!current())throw abortError();
       if(replacements.has(r.id)){const blob=replacements.get(r.id);total+=blob.size;if(total>30*1024*1024)throw Error('Image assets exceed 30 MB.');out.set(r.id,blob);continue;}
       const c = E('canvas', {width: Math.max(1, Math.round(r.w * canvas.width)), height: Math.max(1, Math.round(r.h * canvas.height))});
@@ -137,25 +138,36 @@
   const refs = {};
   function message(text, error = false) {refs.status.textContent = text; refs.status.classList.toggle('design-error', error);}
   function cleanupURLs() {previewURLs.forEach(URL.revokeObjectURL); previewURLs = [];}
-  function setBusy(value) {busy = value; refs.analyse.disabled = value || !canvas; refs.native.disabled = value || !canvas || refs.native.dataset.available === 'unavailable'; refs.apply.disabled = value || refs.preview.dataset.valid!=='true' || !plan?.regions.some(r => r.enabled); refs.cancel.hidden = !value; refs.file.disabled = value; refs.example.disabled = value; refs.manual.disabled = value || !canvas; refs.draw.disabled = value || !canvas; refs.review.inert = value;}
-  async function accept(file) {try {const next = await decode(file);if(!dialog.open)return;clearTimeout(previewTimer);previewSerial++;cleanupURLs();canvas=next; replacements.clear(); plan = null; selected = ''; refs.preview.dataset.valid='false';refs.name.value = (file.name || 'Design').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 60) || 'Design from image'; showReference(); refs.regions.replaceChildren(); refs.properties.replaceChildren(); refs.preview.srcdoc = ''; message('Image ready. Analyse it, or mark your own regions.'); setBusy(false);} catch (err) {message(err.message, true);}}
+  function setBusy(value) {busy = value; refs.analyse.disabled = value || !canvas; refs.native.disabled = value || !canvas || refs.native.dataset.available === 'unavailable'; refs.apply.disabled = value || refs.preview.dataset.valid!=='true' || !plan?.regions.some(r => r.enabled) || R.pending(plan).length>0; refs.cancel.hidden = !value; refs.file.disabled = value; refs.example.disabled = value; refs.manual.disabled = value || !canvas; refs.draw.disabled = value || !canvas; refs.review.inert = value;}
+  async function accept(file) {try {const next = await decode(file);if(!dialog.open)return;clearTimeout(previewTimer);previewSerial++;cleanupURLs();canvas=next; replacements.clear(); plan = null; selected = ''; refs.preview.dataset.valid='false';refs.name.value = (file.name || 'Design').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 60) || 'Design from image'; showReference(); refs.regions.replaceChildren(); refs.properties.replaceChildren(); refs.questions.replaceChildren(); refs.preview.srcdoc = ''; message('Image ready. Analyse it, or mark your own regions.'); setBusy(false);} catch (err) {message(err.message, true);}}
   function showReference() {if (!canvas) return; refs.image.src = canvas.toDataURL('image/png'); refs.image.hidden = false; refs.empty.hidden = true; drawBoxes();}
   function drawBoxes() {refs.boxes.replaceChildren(); for (const [i, r] of (plan?.regions || []).entries()) {if (!r.enabled) continue; const b = button(String(i + 1), () => selectRegion(r.id), 'design-region-box' + (r.id === selected ? ' selected' : '')); b.style.cssText = `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%;`; b.title = r.type + ': ' + (r.text || 'Image'); b.setAttribute('aria-label', 'Select region ' + (i + 1)); refs.boxes.append(b);}}
   function ensurePlan() {if (!plan) {const p = D.pixels(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height)), color = p.dominant(0, 0, canvas.width, canvas.height).map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); plan = D.normalize({width: canvas.width, height: canvas.height, background: '#' + color, regions: []});}}
   async function run(mode) {
     if (!canvas || busy) return; controller = new AbortController(); const signal = controller.signal; setBusy(true); refs.progress.hidden = false; message('Starting local analysis…');
     const timeout = setTimeout(() => controller?.abort(), mode === 'native' ? 300000 : 120000);
-    try {const next = await analyse(canvas, {mode, signal, progress: (text, value) => {message(text); refs.progress.value = value;}}); check(signal); plan = next; replacements.clear(); selected = next.regions[0]?.id || ''; refs.method.textContent = mode === 'native' ? 'Browser AI · on this device' : 'Local analysis · text recognition + layout rules'; refreshReview(); message(next.regions.length ? 'Review the detected regions, then add the editable layout.' : 'No clear regions found. Use Mark a region to outline text, buttons or images.');}
+    try {const next = await analyse(canvas, {mode, signal, progress: (text, value) => {message(text); refs.progress.value = value;}}); check(signal); plan = next; replacements.clear(); selected = next.regions[0]?.id || ''; refs.method.textContent = mode === 'native' ? 'Browser AI · on this device' : 'Local analysis · text recognition + layout rules'; refreshReview(); message(next.regions.length ? 'Answer the highlighted questions, then check the editable preview.' : 'No clear regions found. Use Mark a region to outline text, buttons or images.');}
     catch (err) {message(err.name === 'AbortError' ? 'Analysis stopped. Your existing portfolio is unchanged.' : err.message, err.name !== 'AbortError');}
     finally {clearTimeout(timeout); controller = null; refs.progress.hidden = true; setBusy(false);}
   }
   function refreshReview() {
+    renderQuestions();
     refs.regions.replaceChildren(); refs.count.textContent = (plan?.regions.filter(r => r.enabled).length || 0) + ' editable regions';
     for (const [i, r] of (plan?.regions || []).entries()) {
       const enabled = E('input', {type: 'checkbox', checked: r.enabled, 'aria-label': 'Include region ' + (i + 1), onchange: () => {r.enabled = enabled.checked; refreshReview();}});
       refs.regions.append(E('div', {class: 'design-region-row' + (r.id === selected ? ' selected' : '')}, [enabled, button((i + 1) + ' · ' + r.type + ' · ' + (r.text || 'Image crop').slice(0, 55), () => selectRegion(r.id))]));
     }
     drawBoxes(); renderProperties(); schedulePreview(); setBusy(busy);
+  }
+  function renderQuestions(){
+    if(!refs.questions)return;refs.questions.replaceChildren();if(!plan?.questions?.length)return;
+    const pending=R.pending(plan),q=pending[0];
+    const bar=E('div',{class:'design-question-heading'},[E('strong',{text:q?'Review '+(plan.questions.length-pending.length+1)+' of '+plan.questions.length:'Review complete'}),E('span',{text:pending.length?pending.length+(pending.length===1?' choice remaining':' choices remaining'):'You can change your answers'})]);
+    const history=E('details',{class:'design-answer-history'},[E('summary',{text:'Previous answers'})]);for(const item of plan.questions.filter(q=>q.answer&&q.answer!=='mark'))history.append(button(item.label+' · '+item.options.find(o=>o[0]===item.answer)?.[1],()=>{item.answer='';refreshReview();}));bar.append(history);refs.questions.append(bar);
+    if(!q)return;
+    const box=q.box,thumb=E('canvas',{width:Math.max(1,Math.round(box.w*canvas.width)),height:Math.max(1,Math.round(box.h*canvas.height))});thumb.getContext('2d').drawImage(canvas,box.x*canvas.width,box.y*canvas.height,box.w*canvas.width,box.h*canvas.height,0,0,thumb.width,thumb.height);
+    const choices=E('div',{class:'design-question-choices'});for(const [value,label]of q.options)choices.append(button(label,()=>{plan=R.answer(plan,q.id,value);if(value==='mark'){refs.review.hidden=false;refs.reviewToggle.setAttribute('aria-expanded','true');draw=true;refs.draw.setAttribute('aria-pressed','true');refs.reference.classList.add('drawing');message('Mark the missing control on the reference, choose its type, then choose Yes, continue.');}else{draw=false;refs.reference.classList.remove('drawing');refs.draw.setAttribute('aria-pressed','false');}refreshReview();}));
+    refs.questions.append(E('div',{class:'design-question-card'},[E('img',{src:thumb.toDataURL(),alt:'Area to classify',class:'design-question-thumb'}),E('div',{},[E('h3',{text:q.label}),choices])]));
   }
   function selectRegion(id) {selected = id; refs.review.hidden=false; refs.reviewToggle.setAttribute('aria-expanded','true'); refreshReview();}
   function renderProperties() {
@@ -193,12 +205,12 @@
       const width = +refs.device.value, design = L.resolve(doc, L.device(width));
       const js = 'ForgeRuntime(document.getElementById("site"),' + JSON.stringify(design).replace(/</g, '\\u003c') + ');';
       refs.preview.srcdoc = '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>' + FORGE_RESOURCES.css + '</style><div id="site"></div><script>' + FORGE_RESOURCES.layout + '<\/script><script>' + FORGE_RESOURCES.icons + '<\/script><script>' + FORGE_RESOURCES.runtime + '<\/script><script>' + js + '<\/script>';
-      refs.preview.style.width = width + 'px'; sizePreview(); refs.notes.textContent = result.notes.join(' '); refs.apply.disabled = busy || !plan.regions.some(r => r.enabled); refs.preview.dataset.valid = 'true';
+      refs.preview.style.width = width + 'px'; sizePreview(); refs.notes.textContent = result.notes.join(' '); refs.apply.disabled = busy || !plan.regions.some(r => r.enabled) || R.pending(plan).length>0; refs.preview.dataset.valid = 'true';
     } catch (err) {if(serial!==previewSerial||!dialog?.open)return;refs.preview.dataset.valid = 'false'; refs.apply.disabled = true; refs.notes.textContent = err.message;}
   }
   function sizePreview() {if (!refs.stage) return; const width = +refs.device.value, scale = Math.min(1, refs.stage.clientWidth / width); refs.preview.style.transform = 'scale(' + scale + ')'; refs.preview.style.height = Math.max(400, refs.stage.clientHeight / Math.max(.1, scale)) + 'px';}
   async function apply() {
-    if (busy || !plan) return; clearTimeout(previewTimer); setBusy(true); message('Preparing editable sections and image assets…');
+    if (busy || !plan) return;if(R.pending(plan).length){message('Answer the review questions first.',true);return;} clearTimeout(previewTimer); setBusy(true); message('Preparing editable sections and image assets…');
     try {const media = await crops(canvas, plan,()=>true,replacements); const result = await CraftCareer.applyDesign(plan, media, refs.name.value.trim() || 'Design from image'); dialog.close(); document.dispatchEvent(new CustomEvent('craftcareer-design-applied', {detail: result}));}
     catch (err) {message(err.message, true);} finally {setBusy(false);}
   }
@@ -234,12 +246,13 @@
     refs.regions = E('div', {class: 'design-regions'}); refs.properties = E('div', {class: 'design-properties'}); refs.count = E('strong', {text: '0 editable regions'});
     refs.review = E('div', {class: 'design-review',hidden:true}, [E('div', {class: 'design-region-list'}, [E('div', {class: 'design-pane-heading'}, [refs.count, refs.draw]), refs.regions]), refs.properties]);
     refs.reviewToggle=button('Review regions',()=>{refs.review.hidden=!refs.review.hidden;refs.reviewToggle.setAttribute('aria-expanded',String(!refs.review.hidden));});refs.reviewToggle.setAttribute('aria-expanded','false');
+    refs.questions=E('section',{class:'design-questions','aria-label':'Design review questions'});
     refs.status = E('div', {class: 'design-status', role: 'status', 'aria-live': 'polite', text: 'Your screenshot is analysed on this device. No AI key, account or per-image charge.'}); refs.method = E('span', {class: 'design-method', text: 'Local-first · English text recognition'}); refs.progress = E('progress', {max: 1, value: 0, hidden: true, 'aria-label': 'Design analysis progress'}); refs.notes = E('p', {class: 'design-notes', text: 'You will review an approximation before adding it. Existing sections stay unchanged. Cropped image assets are saved with the new sections.'}); refs.apply = button('Add editable layout →', apply, 'primary'); refs.apply.disabled = true;
     const close = button('×', () => dialog.close()); close.setAttribute('aria-label', 'Close design assistant');
     dialog = E('dialog', {id: 'design-assistant', 'aria-labelledby': 'design-title'}, [
       E('header', {class: 'design-heading'}, [E('div', {}, [E('span', {class: 'design-eyebrow', text: 'CRAFTCAREER · DESIGN ASSISTANT'}), E('h2', {id: 'design-title', text: 'From image to editable canvas'}), refs.method]), close]),
       E('div', {class: 'design-actions'}, [refs.file, refs.example, refs.analyse, refs.native, refs.manual, refs.cancel]),
-      E('div', {class: 'design-feedback'}, [refs.status, refs.progress]),
+      E('div', {class: 'design-feedback'}, [refs.status, refs.progress]),refs.questions,
       E('div', {class: 'design-comparison'}, [E('section', {class: 'design-pane'}, [E('div', {class: 'design-pane-heading'}, [E('strong', {text: 'Reference'}), field('Section name', refs.name)]), referenceScroll]), E('section', {class: 'design-pane'}, [E('div', {class: 'design-pane-heading'}, [E('strong', {text: 'Editable result'}), refs.device]), refs.stage])]), refs.review,
       E('footer', {class: 'design-footer'}, [refs.notes,E('div',{class:'design-footer-buttons'},[refs.reviewToggle, refs.apply])])]);
     dialog.addEventListener('close', () => {if(dialog.open)return;controller?.abort(); clearTimeout(previewTimer); previewSerial++; cleanupURLs(); refs.preview.srcdoc = ''; originalFocus?.focus({preventScroll: true});});

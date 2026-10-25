@@ -1,33 +1,45 @@
-# Shared canvases · cclink foundation
+# CraftCareer shared canvases
 
 ## Hosting
 
-Deploy both `site/` and `server/` from this package using your existing `npm start` service. There is no new environment variable, database, dependency or GitHub permission. Keep `PUBLIC_ORIGIN` set to the exact HTTPS address visitors use, including the chosen www/non-www host. Use one running server instance for this foundation; rooms are held in that process's memory. GitHub Pages alone cannot host this feature.
+Deploy both `site/` and `server/` with the existing `npm start` service. No new environment variable, dependency, database or GitHub permission is required. Keep `PUBLIC_ORIGIN` set to the exact HTTPS address people use. GitHub Pages alone cannot run sharing. Use one running server instance: this release stores temporary rooms in memory.
 
-## Share a canvas
+## Create a link
 
-1. Open or create a portfolio, then click **Share** in the header.
-2. Choose **Viewer — view only** or **Editor — edit together** before creating the cclink.
-3. Click **Create cclink**, then **Copy cclink**. You can switch the permission selector to copy the other link later. Each permission has a separate link.
-4. Send the selected link to your collaborators. An editor link gives anyone holding it permission to edit the shared portfolio and assets. A viewer link displays the canvas without edit controls and cannot save through the server API.
-5. Changes sync after a short pause while editing. Participants check for updates approximately every 2.5 seconds. The status badge shows pending, saved, updated or disconnected states. Ordinary content changes reuse the assets already in the session instead of uploading images every time.
-6. Use **Save ZIP backup** for a permanent copy. The owner can select **End sharing for everyone** to invalidate both links. **Continue locally** disconnects only that browser; it does not end the room for others.
+Open **Workspace → Share canvas**, choose a role and press **Generate new link**. Every generation creates a distinct link. Closing and reopening Share starts a new generation form; it does not expose old link management.
 
-The creator's regular ZIP/config export remains the source format. Sharing sends the configuration, asset paths and asset bytes; it does not replace that format with another proprietary document. GitHub tokens, OAuth secrets and publishing destination associations are never included. The owner's original publishing association stays local. Sharing never automatically publishes.
+| Role | Recipient experience | Owner's canvas | After link deletion |
+|---|---|---|---|
+| Viewer | Views the current shared canvas; cannot edit or save through the API | Unchanged by the viewer | Future access is denied; connected view is locked on its next check |
+| Instance editor | Imports a frozen copy from the time the link was created, then edits locally | Never receives the recipient's edits | Previously imported copies remain on that browser and in exported ZIPs; new imports are denied |
+| Helper | Enters a name, joins the live canvas, edits with the owner | Updates synchronize with revision checks | Reads, writes and cursor updates are denied; the connected editor locks on its next check |
 
-## Simultaneous changes and recovery
+An Instance editor link requires acknowledgement that recipients may retain their copy. Revoking any link cannot erase a ZIP, screenshot or other data someone already saved. Export an independent copy as a ZIP for portability to another device.
 
-This first version synchronizes complete configuration revisions; it is not a character-by-character co-editing engine. If two people change the same revision at the same time, one save succeeds and the other receives **Shared changes need review**. It does not silently overwrite either person's local work.
+## Sent links
 
-The person with a conflict can export their local ZIP, load the shared version, then reapply the desired changes. They can instead continue locally. Unsaved shared changes restored from a local draft are also held for review after a reload. Undo history resets when an incoming shared revision is applied, so Undo does not accidentally reverse someone else's edits.
+**Workspace → Sent links** lists links created from this browser, with their role, creation time and status. Copy an active link, **Delete link**, or **Delete all active links**. Deletion asks for confirmation. One link can be revoked without affecting the others. Independent copies already imported remain separate.
 
-## Limits in this foundation
+Sent-link management credentials are stored locally on the owner's browser. Clearing that storage loses this management list; there is no signed-in cross-device link dashboard. Link tokens are carried in the URL fragment and sent to the server in authorization headers, not put into exported configuration.
 
-- Session links last **up to 24 hours**, measured from creation. A **server restart, redeploy or instance replacement ends all rooms** immediately. Free hosting sleep/restarts can therefore interrupt sharing.
-- Assets: **15 MB total**, at most 400 files per session. Configuration: 2 MB. Rooms are also capped globally to bound memory usage. Large portfolios should use ZIP exchange until persistent storage is added.
-- Shared sessions reject executable/HTML/XML and SVG files. Convert SVG imagery to PNG/WebP for sharing. Regular local editing and ZIP export retain original files.
-- No accounts, participant identity list, live cursors, per-person invitations, permanent cloud storage or granular change merging are included yet.
-- Links are bearer capabilities: whoever holds an editor link can edit. Treat editor links as private. End the room and create a new one to replace compromised links. There is no individual participant revocation in this foundation.
-- Participant drafts are separated from the regular local workspace. Browser storage is a recovery aid, not a durable backup. Export ZIPs before leaving a session, replacing work or redeploying the server.
+## Working together
 
-For a later production collaboration phase, add authenticated invitations, persistent rooms/assets, durable revision history and granular operation merging before running multiple server instances. The current foundation deliberately reports conflicts and expiration rather than promising permanent collaborative storage.
+Helpers choose a name before the canvas is loaded. Others see that name above their cursor. The original sender is labelled **Owner**. Each participant sees only remote cursors, not another copy of their own. Cursors map to the same section/cell even at different editor zoom levels; they appear when people view the same page and device layout. Disconnected cursors disappear after approximately 12 seconds.
+
+Names are display names, not verified identities. Links give access to whoever holds them. Share Helper links only with intended collaborators.
+
+Content sync checks run approximately every two seconds and after a brief pause in editing. Cursor updates run roughly twice a second. Hidden tabs reduce cursor traffic. The status badge reports syncing, saved, connection errors or conflicts. GitHub credentials and publishing associations are never shared. Sharing does not publish a website.
+
+If people edit the same revision at once, the second save is held for review rather than silently replacing either local version. Use **Save my ZIP**, then **Load shared version** and reapply the desired changes. This is complete-revision synchronization, not character-level concurrent merging. Incoming revisions reset Undo history to avoid reversing another person's changes. Pending local edits recovered after reload also require review.
+
+Opening another ZIP or starting a new portfolio disconnects that browser from its shared room before replacing the document. **Stop syncing on this device** also disconnects the owner locally; links remain active until deleted or expired.
+
+## Limits and storage
+
+- Rooms last **up to 24 hours from initial creation**. Every link in that room shares its expiry. A server restart, redeploy or replacement ends all rooms earlier.
+- Independent copies already imported persist in their own local browser draft. Browser storage can be cleared or fail; export a ZIP for a reliable backup.
+- Maximum 15 MB of assets, 400 files, 2 MB configuration, 100 generated links per room and 30 concurrent cursor participants. Server-wide memory and creation limits also apply.
+- Shared sessions refuse executable/HTML/XML/SVG assets. Use PNG/WebP for shared imagery. Local ZIP export retains original assets.
+- No persistent cloud storage, accounts, authenticated invitations, automatic merge history or multi-server coordination is provided in this foundation.
+
+The section config format and ordinary asset folders remain unchanged. Presence, link permissions and management tokens are editor/session data, not authored website content. Add durable storage and authenticated access before promising permanent collaboration links.

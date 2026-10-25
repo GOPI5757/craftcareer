@@ -1,6 +1,6 @@
 {
   "name": "craftcareer",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "description": "CraftCareer portfolio creator with local image-to-layout assistance, GitHub publishing and shared canvases",
   "engines": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server/server.mjs",
-    "test": "node tests/server.test.mjs && node tests/sharing.test.mjs && node site/verification/model.test.js && node site/verification/layout.test.js && node --test tests/design.test.mjs",
+    "test": "node tests/server.test.mjs && node tests/sharing.test.mjs && node site/verification/model.test.js && node site/verification/layout.test.js && node --test tests/design.test.mjs && node --test tests/design-review.test.mjs && node tests/links.test.mjs",
     "test:browser": "node tests/browser-server.mjs"
   }
 }

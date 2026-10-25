@@ -1,5 +1,8 @@
-# Private visual regression fixture
+# Private reference fixtures
 
-The `/fidelity.html` harness runs real local OCR against the user-supplied 2557 × 1351 artist-portfolio screenshot (black navigation header, orange landscape, GAME ARTIST / Portfolio hero). Place that exact file here as `artist-reference.png`, then run the local browser test server.
+Private user screenshots are excluded from the release ZIP.
 
-The original screenshot is not included in the distributed creator package. The synthetic image tests at `/verification/design.html` run without it. `fidelity.html` assertions check this particular reference, not universal reconstruction accuracy.
+- `/fidelity.html` needs `artist-reference.png`: the previously supplied 2557 × 1351 artist hero screenshot.
+- `/guided.html` needs `guided-reference.png`: Screenshot 2026-10-25 212357.png, 2557 × 1338, with a black navigation header, orange landscape, GAME ARTIST / Portfolio title and three social buttons at bottom left.
+
+Place those files in this folder before running the local browser test server. These are exact-fixture tests, not a claim of universal reconstruction accuracy. The synthetic tests at `/verification/design.html` and the Node tests run without either private file.

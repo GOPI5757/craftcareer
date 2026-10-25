@@ -1,0 +1,16 @@
+/* Editor chrome scales by available space, independently of the portfolio preview. */
+body:not(.full-view) .app-header{height:auto;min-height:4.4rem;display:flex;flex-wrap:wrap;gap:.55rem;padding:.65rem 1rem;overflow:visible;align-items:center}
+body:not(.full-view) .app-header .brand{margin-right:.5rem;flex:0 0 auto}
+body:not(.full-view) .app-header>.document-name{display:none}
+body:not(.full-view) .app-header>.preview-controls{margin-left:auto;flex:1 1 24rem;justify-content:flex-end;min-width:0;gap:.45rem}
+body:not(.full-view) .app-header button,body:not(.full-view) .app-header summary{white-space:nowrap;min-height:2.5rem}
+.app-header #settings-menu{flex:0 0 auto;position:relative;margin:0}
+#settings-menu .settings-popover{right:0;left:auto;max-height:calc(100dvh - var(--app-header-height,5rem) - 1rem);overflow-y:auto;width:min(19rem,calc(100vw - 2rem));z-index:100}
+.app-header #settings-menu>summary{display:flex;align-items:center;gap:.5rem;padding:.65rem .85rem}
+.app-header .preview-controls select{min-width:0;max-width:11rem}
+@media (max-width:1450px){body:not(.full-view) .app-header>.preview-controls{order:2;flex-basis:calc(100% - 18rem);margin-left:0;justify-content:flex-start}body:not(.full-view) .app-header>#github-publish,body:not(.full-view) .app-header>#settings-menu{order:3}body:not(.full-view) .app-header>.history-controls{margin-left:auto}body:not(.full-view) .app-header .brand{font-size:1.1rem}.workspace{grid-template-columns:minmax(0,1fr) 310px}}
+@media (max-width:1050px){body:not(.full-view) .app-header{padding:.5rem .65rem;gap:.4rem}body:not(.full-view) .app-header button{padding:.5rem .65rem}.app-header .brand small{font-size:.65rem}.app-header .preview-controls select{max-width:10rem}.workspace{grid-template-columns:minmax(0,1fr) 285px}}
+@media (max-width:750px){body:not(.full-view) .app-header>.preview-controls{flex-basis:100%;flex-wrap:wrap}.app-header .preview-controls select{flex:1}.app-header>#github-publish{margin-left:auto}.app-header .brand{width:auto}.app-header .history-controls{margin-left:0!important}}
+
+/* In very short windows, reserve the right panel for the active controls. */
+@media(max-height:500px){#right-panels{grid-template-rows:0 0 minmax(0,1fr)}#hierarchy,#panel-resizer{visibility:hidden}}

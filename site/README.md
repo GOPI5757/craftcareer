@@ -52,7 +52,7 @@ This update fixes canvas clipping during scrolling/navigation and keeps the insp
 
 ## Navigation update — 24 October 2026
 
-- **Header:** Edit/Browse, Assets, page/device preview, Full view, and panel visibility. **Settings** holds creator color/theme, New, Open ZIP, Save, Export, tutorial and quick guide. Website settings and Undo/Redo are separate header controls.
+- **Header:** Edit/Browse, Assets, page/device preview, Full view, and panel visibility. **Workspace** holds creator color/theme, New, Open ZIP, Save, Export, tutorial and quick guide. Website settings and Undo/Redo are separate header controls.
 - **Bottom components tray:** drag into a cell, or select a cell and click a component. Use arrows, the mouse wheel, horizontal trackpad scrolling, or middle-button dragging to browse the tray. Dropping a new component on an occupied leaf replaces it; Undo restores the previous component.
 - **Hierarchy:** automatically named sections, subsections, split cells, components, and project cards. Expand branches to navigate; selecting a row opens its inspector. Empty cells are labelled clearly. Hierarchy labels are generated from content and cannot be renamed there. Section names remain editable in Section settings.
 - **Panel divider:** drag the horizontal divider between Hierarchy and Inspector, or focus it and use Up/Down. Its position is remembered on this browser.
@@ -72,7 +72,7 @@ The included tutorial is retained. It demonstrates the previous workspace layout
 
 ### Watch the tutorial
 
-Click **Video tutorial** in the Settings menu. The 2-minute 36-second tutorial opens over the editor, with English narration, visible captions, animated pointers, playback speed/fullscreen controls, and chapter shortcuts. Press Play to begin. Close the player or press Escape to return to your work; closing pauses the video and reopening keeps its playback position during that session.
+Click **Video tutorial** in the Workspace menu. The 2-minute 36-second tutorial opens over the editor, with English narration, visible captions, animated pointers, playback speed/fullscreen controls, and chapter shortcuts. Press Play to begin. Close the player or press Escape to return to your work; closing pauses the video and reopening keeps its playback position during that session.
 
 The tutorial is bundled in `tutorial/`, so it also works when opening the creator locally. Keep that folder with the creator when hosting it. The video is loaded on demand, and is not included in portfolios your users export.
 
@@ -209,7 +209,7 @@ See **TEST-REPORT.md** for completed verification and the scope of testing. The 
 
 ## Sizing and cell blending update
 
-- Website settings, Undo, and Redo are directly on the top bar. Settings still contains creator appearance, file operations, and the tutorial.
+- Website settings, Undo, and Redo are directly on the top bar. Workspace contains creator appearance, file operations, and the tutorial.
 - Select a component to reveal edge handles. Drag an edge to resize its frame without scaling its font or icon; keyboard arrow keys adjust a focused edge, Shift increases the step, and Escape cancels an unfinished drag. One completed drag is one Undo step. Components stay bounded by their cell.
 - Buttons have **Fit to content**, **Width**, and **Height** in Button dimensions & icon. Editing a dimension turns Fit off. Custom dimensions retain a content-sized minimum, bounded by the available cell. Fit restores automatic sizing. Button lists expose these controls for each item.
 - Other components have a Frame size group. Turning Fit back on restores their normal component-specific sizing. Resizing changes the frame, and overflowing text/code/form content scrolls inside it. Flexible sections expose top/bottom resize edges when selected. Infinite, project-page and popup subsections expose edges around their actual content grid; select the subsection in the hierarchy to resize it.
@@ -221,3 +221,8 @@ See **TEST-REPORT.md** for completed verification and the scope of testing. The 
 
 Buttons retain the existing `sizeMode: "auto" | "custom"`, `width`, and `height` fields in rem. Other components use `dimensions: { enabled, width, height }`; `enabled: false` is Fit to content. Flexible sections use their existing `height`, and subsections retain `height` and `heightMode`. Split cells use `blends: [{ left, right, enabled, width }]`, where left/right are the stable adjacent child cell IDs. Copying a project page remaps these references to the copied cells. All fields are ordinary serializable configuration values, and older exported sites still import with neutral defaults.
 
+
+
+## Guided review and sharing (1.5)
+
+From image now asks multiple-choice questions for uncertain controls and keeps images in proportion. Open GitHub and Share canvas are under Workspace. Sent links manages Viewer, Instance editor and Helper links separately. Helpers choose a name and see remote cursors. Independent imports remain local even after the source link is deleted. Temporary rooms still end after 24 hours or a server restart. See the package-level DESIGN-ASSISTANT.md and SHARING.md for details.
