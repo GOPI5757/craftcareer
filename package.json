@@ -1,14 +1,14 @@
 {
   "name": "craftcareer",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
-  "description": "CraftCareer portfolio creator with GitHub Pages publishing",
+  "description": "CraftCareer portfolio creator with GitHub publishing and temporary shared canvases",
   "engines": {
     "node": ">=22.9"
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server/server.mjs",
-    "test": "node tests/server.test.mjs && node site/verification/model.test.js && node site/verification/layout.test.js",
+    "test": "node tests/server.test.mjs && node tests/sharing.test.mjs && node site/verification/model.test.js && node site/verification/layout.test.js",
     "test:browser": "node tests/browser-server.mjs"
   }
 }

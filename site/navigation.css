@@ -95,3 +95,10 @@ body.browse-mode #context-toolbar,body.full-view #context-toolbar {display:none;
  .app-header .history-controls button{min-width:27px;padding:5px;font-size:17px;}
  .app-header .segmented{margin-right:0;}
 }
+
+.field-spotlight{outline:2px solid var(--accent);border-radius:.4rem}.toolbar-background{flex-shrink:0;border-color:var(--accent)}
+
+.pending-uploads{border:1px solid var(--accent);border-radius:.5rem;padding:1rem;max-height:40vh;overflow:auto;flex-shrink:0}.pending-uploads>strong{display:block;margin-bottom:.7rem}.upload-name,.asset-rename{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}.upload-name input,.asset-rename input{min-width:0;flex:1}.asset-rename{flex-wrap:wrap}.pending-uploads[hidden]{display:none}
+
+.asset-actions{flex-wrap:wrap}#github-open-project,#share-canvas{white-space:nowrap}
+@media(min-width:1001px) and (max-width:1390px){.app-header{height:auto;flex-wrap:wrap}.app-header .preview-controls{flex:1 1 auto}}

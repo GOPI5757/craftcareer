@@ -9,3 +9,5 @@
 body[data-theme=light] .publish-live .publish-link {color:#075dcc;}
 .publish-live .publish-link:hover {text-decoration-thickness:2px;}
 .publish-live .publish-link:focus-visible {outline:2px solid currentColor;outline-offset:4px;}
+
+#publish-dialog.checking-status .publish-status{border-left:3px solid var(--accent);padding-left:1rem;animation:status-pulse .7s ease-in-out infinite alternate}@keyframes status-pulse{to{opacity:.6}}

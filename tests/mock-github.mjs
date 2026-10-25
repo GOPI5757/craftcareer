@@ -28,7 +28,7 @@ export function mockGitHub(){
   if(p==='/git/commits'&&method==='POST'){const c={sha:key(),tree:{sha:b.tree},parents:b.parents};commits.set(c.sha,c);return response(201,c);}
   if(p.startsWith('/git/commits/'))return response(200,commits.get(p.slice(13)));
   if(p==='/pages'){if(method==='GET')return response(r.pages?200:404,r.pages||{});if(method==='DELETE'){r.pages=null;return response(204);}r.pages={...b,html_url:`https://student.github.io/${name}/`};return response(method==='POST'?201:204,method==='POST'?r.pages:undefined);}
-  if(p==='/pages/builds'&&method==='POST'){r.build={status:'building',commit:r.head};return response(201,r.build);}
+  if(p==='/pages/builds'&&method==='POST'){if(r.busyBuilds>0){r.busyBuilds--;return response(409,{});}r.build={status:'building',commit:r.head};return response(201,r.build);}
   if(p==='/pages/builds/latest')return response(r.build?200:404,r.build||{});
   throw Error('Unmocked endpoint '+method+' '+p);
  }

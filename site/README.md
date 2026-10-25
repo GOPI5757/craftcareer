@@ -4,6 +4,10 @@
 
 Create a responsive portfolio from sections, grids, and components. Everything you create is saved as editable configuration when you export your website.
 
+## Current update
+
+Version 1.3 adds reliable Pages update builds, a separate Open GitHub button, right-drag copies, a Background shortcut, navbar height, custom scrollbars, project-card actions, safe asset renaming and temporary cclinks. See **../UPDATE-GUIDE.md** and **../SHARING.md**. Sharing and GitHub operations require the included Node server. Editing and ZIP export can still run locally.
+
 ## Editing update
 
 See **../UPDATE-GUIDE.md** for the docked toolbar, Shift resize, vertical alignment, compact list editing, Ctrl+D, Ctrl+1 isolation, additional icons, and reopening portfolios from GitHub.
@@ -48,7 +52,7 @@ This update fixes canvas clipping during scrolling/navigation and keeps the insp
 
 ## Navigation update — 24 October 2026
 
-- **Header:** Edit/Browse, Assets, page/device preview, Full view, and panel visibility. **Settings** holds website settings, creator color/theme, New, Open ZIP, Save, Export, Undo/Redo, tutorial, and quick guide.
+- **Header:** Edit/Browse, Assets, page/device preview, Full view, and panel visibility. **Settings** holds creator color/theme, New, Open ZIP, Save, Export, tutorial and quick guide. Website settings and Undo/Redo are separate header controls.
 - **Bottom components tray:** drag into a cell, or select a cell and click a component. Use arrows, the mouse wheel, horizontal trackpad scrolling, or middle-button dragging to browse the tray. Dropping a new component on an occupied leaf replaces it; Undo restores the previous component.
 - **Hierarchy:** automatically named sections, subsections, split cells, components, and project cards. Expand branches to navigate; selecting a row opens its inspector. Empty cells are labelled clearly. Hierarchy labels are generated from content and cannot be renamed there. Section names remain editable in Section settings.
 - **Panel divider:** drag the horizontal divider between Hierarchy and Inspector, or focus it and use Up/Down. Its position is remembered on this browser.
@@ -56,7 +60,7 @@ This update fixes canvas clipping during scrolling/navigation and keeps the insp
 - **Inspector:** labels and controls sit side by side, with ↺ reset buttons. Appearance and the floating toolbar show controls relevant to the selected component. Font controls for captions/titles are separate from media appearance. Hex edits immediately update their color swatch. Inspector scroll and disclosure state remain intact during updates.
 - **Move components:** click anywhere in an occupied leaf cell to select it; drag the cell to move or swap its component. Double-click text to edit it directly. Internal image drags reuse the existing asset. External file drops ask where to save.
 - **Asset library:** a large content-browser dialog, folder tree on the left and assets on the right. Upload multiple images/documents/models, create section subfolders, pick assets, and move them with references updated across devices. Protected section/type roots and Archive rules are unchanged.
-- **YouTube only:** new YouTube video imports are rejected, including direct drops. Video components, gallery videos and background video settings accept YouTube URLs. Existing video files in older ZIPs are preserved for recovery/cleanup, but YouTube video playback is replaced by a YouTube prompt. Legacy video folders remain accessible when they contain files.
+- **YouTube only:** new local video file imports are rejected, including direct drops. Video components, gallery videos and background video settings accept YouTube URLs. Existing video files in older ZIPs are preserved for recovery/cleanup, but YouTube video playback is replaced by a YouTube prompt. Legacy video folders remain accessible when they contain files.
 - **Fixed canvases:** Fit sections use the available viewport height; Flexible sections use their configured rem height. Subsection height controls its grid. Resizing splits or enlarging components does not enlarge these canvases. Components stay within their cells, and long text can scroll inside its cell. Infinite/project/content-panel sections still grow by adding subsections. Set device overrides where a layout needs more room.
 - **Background borders:** Background layers now includes border width, border color, and corner radius.
 

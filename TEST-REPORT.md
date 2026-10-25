@@ -1,38 +1,47 @@
-# CraftCareer 1.2 — verification report
+# CraftCareer 1.3 verification report
 
 Date: 25 October 2026.
 
 ## Results
 
-- 38 server integration checks — passed.
-- 30 document/model checks — passed.
-- 11 responsive-layout checks — passed.
-- 111 existing browser editor regression checks — passed.
-- 25 browser editing checks — passed.
-- 30 browser publishing checks against the local simulated GitHub service — passed.
+| Suite | Passing checks |
+|---|---:|
+| GitHub service integration | 39 |
+| Shared canvas service | 21 |
+| Document/model | 30 |
+| Responsive layout | 11 |
+| Browser editor regression | 111 |
+| Browser editing and viewport | 25 |
+| Browser publishing with simulated GitHub | 30 |
+| Browser collaboration, assets and new controls | 22 |
+| **Total** | **289** |
 
-Total: **245 passing checks**. See README.md for reproducible commands and browser harness URLs.
+See README.md for commands and browser harness URLs. The delivery ZIP is checked for integrity, every packaged file is compared with the tested source, and the Node suites are run again from the extracted package.
 
-## Controls and publishing-link update
+## Publishing
 
-The active Isolate label now uses the contrasting accent ink color. Split, Edit split, remove-component and blend buttons retain readable screen sizes as the preview zoom changes; checks cover editor widths of 1440, 1024 and 800 pixels. The published address is above the action buttons and is blue and underlined in both themes. The compact shared section/context row is retained. Server files, auth settings, configuration schema, tutorial and portfolio content are unchanged.
+Tests cover new and updated repositories, managed-file preservation, current-commit build status, automatic retry after a busy build, no unnecessary Pages reconfiguration on update, cache revision changes, stable revisions for unchanged exports, status refresh feedback, blue underlined live addresses above buttons, opening previous portfolios through the separate GitHub button, rapid close/reopen, expired sessions, unpublish, republish and disconnect. Reopening waits until import and destination restoration finish before closing.
 
-## Editing coverage
+Existing OAuth state, PKCE, bound HttpOnly cookie, same-origin/CSRF, upload hash/size and repository ownership checks still pass. There is no new OAuth scope or secret. Updates use atomic commits without force push or repository deletion.
 
-Eight resize handles; screen-space hit targets; small-component handle separation; Shift aspect ratio; Undo/Redo and cancellation; full-cell edge reachability; corner controls above resize hit areas; docked toolbar geometry; numeric scrubbing; split-count scrubbing; vertical text alignment; underline; zero-gap lists; compact item selection and inspector scrolling; Ctrl+D duplicate identity and style; typing field shortcut exclusions; arrow-key alignment; isolation and return to a lower-page scroll position; remove confirmation and Undo; icon-only buttons; transparent hover/pressed fills; local social icons; favicon/title; config export/import round trips.
+## Collaboration foundation
 
-Desktop Edit, Browse and Full view logical rectangles were compared directly. The existing viewport suite covers 1920×1080, 1366×768, 1024×768, 768×900, 390×844 and 600×360 editor sizes with desktop/tablet/mobile previews, both scroll ends and inspector reachability. Full view also adapts when the browser is resized.
+Service checks cover distinct owner/editor/viewer capabilities, unauthorized and cross-origin requests, viewer write refusal, owner-only revocation, optimistic revision conflicts, expiry, memory/size limits, traversal and duplicate-name refusal, prototype-key validation, all-device document validation, exclusion of publishing metadata and script-capable assets, asset reuse and asset-cache invalidation.
 
-## Publishing coverage
+Browser checks use three separate workspaces for owner, editor and viewer. They verify actual shared changes, view-only controls, concurrent local edits preserved for review, explicit conflict resolution, portable config exports, and ending the synthetic room. This is a temporary revision-based collaboration foundation, with the limitations documented in SHARING.md.
 
-Existing OAuth state, PKCE, bound HttpOnly cookie, same-origin/CSRF, upload hash/size and repository ownership checks still pass. No auth scope or environment variable was added. Tests cover managed-file preservation, atomic commits, conflict detection, no force push or repository deletion, Pages state and external unpublish, session expiry, rapid dialog close/reopen, disconnect, deployment progress, safe links and unchanged public repository association.
+## Canvas, assets and regression coverage
 
-Reopening tests cover portfolio discovery, private/non-admin exclusion, invalid identity, managed config/asset restrictions, commit-pinned blob reads after subsequent repository edits, byte/hash verification, arbitrary-file refusal, opening a previous destination after choosing a separate copy, and publishing back to that destination.
+Right-button copy preserves the source and styling, generates independent IDs, supports Undo, and keeps left-drag moving/swapping. Every component has a Background shortcut. Navigation and navigation-section heights render from configuration. Scrollbar theme settings reach preview and export. Project add/remove controls appear in Edit only, removal asks confirmation, and category-specific creation retains the selected category.
 
-## Visual and package verification
+External image drops open the content browser, select a destination and filename, and use the converted asset. Renaming updates desktop and mobile references and export paths; duplicate filenames cannot overwrite an existing file.
 
-The actual creator was inspected in the browser, including selected-element resize controls, the fixed context strip, isolation and the single compact desktop header. Browser tests use the production editor and shared runtime resources. JavaScript syntax and resource consistency were checked. The delivery ZIP is integrity-checked and extracted for the Node test suites.
+The earlier viewport, inspector and editing suites cover scroll reachability, disclosure preservation, logical Edit/Browse/Full-view geometry, numeric dragging, zero-gap lists, eight resize handles, Shift proportions, small-component controls, individual corners, isolation, restoring a lower-page scroll position, keyboard shortcuts, button states, icon-only buttons and config export/import. Editor sizes include 1920×1080, 1366×768, 1024×768, 768×900, 390×844 and 600×360.
+
+## Visual and source verification
+
+The real editor was inspected in the browser. The selected-element toolbar shares the section row, the header contains Open GitHub and Share, and canvas tools remain readable. JavaScript syntax was checked, and embedded runtime/CSS/layout/icon resources match their source files. The tutorial, icon library, existing environment template and hosting files are retained.
 
 ## Verification limits
 
-The GitHub tests use a local HTTP service with simulated GitHub responses. No real GitHub OAuth login, production repository modification, or public Pages deployment was performed during this update. Existing authentication configuration is retained. Real GitHub availability, API quotas, browser-reserved shortcuts and host deployment timings remain external dependencies; tests are not a guarantee that every possible website configuration is bug-free.
+GitHub tests use a local HTTP service with simulated GitHub responses. No real OAuth login, production repository modification or public Pages deployment was performed for this update. Sharing tests run on the local included server, not a production Render instance. Host restarts, live API availability, quotas and deployment latency remain external dependencies. Tests do not guarantee that every possible user-authored configuration is bug-free.

@@ -307,3 +307,8 @@ details.subsection {display:block;}
 .edit-site .leaf > .cell-tools {width:max-content;max-width:none;top:calc(5px * var(--editor-ui-scale,1));}
 .edit-site .remove-component {min-width:calc(34px * var(--editor-ui-scale,1))!important;font-size:calc(20px * var(--editor-ui-scale,1))!important;padding:0!important;}
 .edit-site .cell-blend-toggle {width:calc(34px * var(--editor-ui-scale,1));height:calc(34px * var(--editor-ui-scale,1));min-width:calc(34px * var(--editor-ui-scale,1))!important;min-height:calc(34px * var(--editor-ui-scale,1))!important;font-size:calc(21px * var(--editor-ui-scale,1))!important;}
+
+.copy-drag-ghost{position:fixed;z-index:2147483640;pointer-events:none;padding:.6rem 1rem;border-radius:.4rem;color:#fff;background:#253244;box-shadow:0 4px 20px #0008;font:14px system-ui}
+.editable-project-card{position:relative;min-width:0;display:flex}.editable-project-card>.project-card{width:100%;height:100%}.remove-project-card{position:absolute;right:.5rem;top:.5rem;width:2.2rem;height:2.2rem;border:1px solid #ff7487;border-radius:.4rem;background:#25151ceF;color:white;font-size:1.3rem;z-index:5}.project-cards>.add-project-card{position:relative;inset:auto;display:grid;place-items:center;min-height:10rem;opacity:1;visibility:visible;border:2px dashed #ef6477;background:#ef647710;color:inherit;font:inherit;border-radius:.7rem}
+
+.edit-site .remove-project-card{width:calc(34px * var(--editor-ui-scale,1));height:calc(34px * var(--editor-ui-scale,1));font-size:calc(20px * var(--editor-ui-scale,1));padding:0}
